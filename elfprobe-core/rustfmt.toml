@@ -1,0 +1,10 @@
+# unstable_features = true
+# cargo +nightly fmt --check
+
+# brace_style = "AlwaysNextLine"
+# combine_control_expr = false
+# control_brace_style = "ClosingNextLine"
+# empty_item_single_line = false
+
+max_width = 80
+tab_spaces = 2
