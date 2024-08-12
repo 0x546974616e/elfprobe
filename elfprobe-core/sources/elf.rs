@@ -1,5 +1,9 @@
 #![allow(non_camel_case_types)] // TODO: Temporary?
 
+// https://github.com/rust-lang/rfcs/blob/master/text/1210-impl-specialization.md
+// https://rust-lang.github.io/rfcs/1210-impl-specialization.html#the-default-keyword
+// https://users.rust-lang.org/t/whats-default-fn/105388/6
+
 use std::fmt::Display;
 use std::marker::PhantomData;
 

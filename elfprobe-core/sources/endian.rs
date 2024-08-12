@@ -131,3 +131,37 @@ impl Endianness for LittleEndian {
     "LE"
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  macro_rules! test_endianness {
+    // It will be so much profitable to use sts::concat_idents!().
+    ($function: ident, $endian: ident, $type: ident, $initial: literal) => {
+      #[test]
+      fn $function() {
+        let mut value;
+        // The write/read function composition should return the initial value.
+        // Native Endian -> Current Endian (maybe no-op) -> Native Endian
+        value = <$endian as EndianOperation<$type>>::write($initial);
+        value = <$endian as EndianOperation<$type>>::read(value);
+        assert_eq!(value, $initial);
+      }
+    };
+  }
+
+  #[rustfmt::skip] test_endianness!(big_endian_i16_write_read, BigEndian, i16, 0x1122);
+  #[rustfmt::skip] test_endianness!(big_endian_u16_write_read, BigEndian, u16, 0x1122);
+  #[rustfmt::skip] test_endianness!(big_endian_i32_write_read, BigEndian, i32, 0x1122_3344);
+  #[rustfmt::skip] test_endianness!(big_endian_u32_write_read, BigEndian, u32, 0x1122_3344);
+  #[rustfmt::skip] test_endianness!(big_endian_i64_write_read, BigEndian, i64, 0x1122_3344_5566_7788);
+  #[rustfmt::skip] test_endianness!(big_endian_u64_write_read, BigEndian, u64, 0x1122_3344_5566_7788);
+
+  #[rustfmt::skip] test_endianness!(little_endian_i16_write_read, LittleEndian, i16, 0x1122);
+  #[rustfmt::skip] test_endianness!(little_endian_u16_write_read, LittleEndian, u16, 0x1122);
+  #[rustfmt::skip] test_endianness!(little_endian_i32_write_read, LittleEndian, i32, 0x1122_3344);
+  #[rustfmt::skip] test_endianness!(little_endian_u32_write_read, LittleEndian, u32, 0x1122_3344);
+  #[rustfmt::skip] test_endianness!(little_endian_i64_write_read, LittleEndian, i64, 0x1122_3344_5566_7788);
+  #[rustfmt::skip] test_endianness!(little_endian_u64_write_read, LittleEndian, u64, 0x1122_3344_5566_7788);
+}

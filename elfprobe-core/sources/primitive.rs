@@ -10,11 +10,15 @@ use crate::pod::Pod;
 
 macro_rules! create_from_primitive {
   ($name: ident, $type: ident) => {
+    #[doc = concat!("An `", stringify!($type), "` wrapper with selectable endianness.")]
+    ///
     /// I think it is convenient to bound the `Endianness` to the struct to then
     /// access all struct's method without respecify the generic endianness
     /// every time.
+    ///
     // Or unaligned [u8; N]?
     // Zero-cost abstraction
+    // transparent
     // partialeq: the operator must be sysmetric and transitive
     // eq is a marker, (used by hash) operator must be reflexive, sysmetric, transitive
     // TODO
@@ -80,37 +84,34 @@ mod tests {
     ($primitive: ident, $type: ident, $value: literal) => {
       mod $type {
         use super::*;
-        mod big_endian {
-          use super::*;
-          test_primitive!($primitive, $type, BigEndian, $value);
-        }
-
-        mod little_endian {
-          use super::*;
-          test_primitive!($primitive, $type, LittleEndian, $value);
-        }
+        test_primitive!($primitive, $type, BigEndian, big_endian, $value);
+        test_primitive!($primitive, $type, LittleEndian, little_endian, $value);
       }
     };
 
-    ($primitive: ident, $type: ident, $endian: ident, $value: literal) => {
-      #[test]
-      fn get() {
-        let value = $primitive::<$endian>::from($value);
-        assert_eq!(value.get(), $value);
-      }
+    ($primitive: ident, $type: ident, $endian: ident, $name: ident, $value: literal) => {
+      mod $name {
+        use super::*;
 
-      #[test]
-      fn set() {
-        let mut value = $primitive::<$endian>::from(0x0);
-        value.set($value);
-        assert_eq!(value.get(), $value);
-      }
+        #[test]
+        fn get() {
+          let value = $primitive::<$endian>::from($value);
+          assert_eq!(value.get(), $value);
+        }
 
-      #[test]
-      fn equal() {
-        let value1 = $primitive::<$endian>::from($value);
-        let value2 = $primitive::<$endian>::from($value);
-        assert_eq!(value1, value2);
+        #[test]
+        fn set() {
+          let mut value = $primitive::<$endian>::from(0x0);
+          value.set($value);
+          assert_eq!(value.get(), $value);
+        }
+
+        #[test]
+        fn equal() {
+          let value1 = $primitive::<$endian>::from($value);
+          let value2 = $primitive::<$endian>::from($value);
+          assert_eq!(value1, value2);
+        }
       }
     };
   }
