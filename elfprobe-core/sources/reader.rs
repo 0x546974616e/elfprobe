@@ -9,6 +9,7 @@
 /// references `&T` implement `Copy`).
 ///
 /// (Inspiref from [`object::read::ReadRef`][read_ref] trait crate.)
+///
 /// [read_ref]: https://tidelabs.github.io/tidext/object/read/trait.ReadRef.html
 ///
 /// # Developer notes
@@ -43,15 +44,15 @@
 /// stack and when it violate Rust's owership model (multiple shared references,
 /// double free potential, etc.).
 ///
-/// With all this in mind, is it relevant to use `Copy` and `Clone` bounds here?
-///
 /// ## Sources
 ///
-/// - https://oswalt.dev/2023/12/copy-and-clone-in-rust/
-/// - https://doc.rust-lang.org/std/marker/trait.Copy.html
-/// - https://doc.rust-lang.org/std/clone/trait.Clone.html
+/// - <https://oswalt.dev/2023/12/copy-and-clone-in-rust/>
+/// - <https://doc.rust-lang.org/std/marker/trait.Copy.html>
+/// - <https://doc.rust-lang.org/std/clone/trait.Clone.html>
 ///
 pub trait Reader<'data>: Copy + Clone {
+  #[allow(unused)]
+  /// Returns the total length, this description is useless because it's obvious.
   fn length(self) -> usize;
 }
 

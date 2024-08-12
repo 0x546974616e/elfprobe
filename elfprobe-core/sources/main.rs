@@ -63,12 +63,19 @@ https://maskray.me/blog/2021-01-31-metadata-sections-comdat-and-shf-link-order
 
 // pub(crate) ?
 
+// od -An -t x1 -j 4 -N 1 $(which ls) | tr -d [[:space:]]
+
 use std::env;
 use std::fs::File;
 
 // mod MappedFile;
 mod elf;
-mod read;
+mod endian;
+mod file;
+mod pod;
+mod primitive;
+mod reader;
+// mod r#type;
 
 use std::io;
 
@@ -94,23 +101,38 @@ fn test_file() -> io::Result<()> {
 }
 
 fn main() {
-  // println!("{:?}", dada());
-
-  use read::*;
+  use crate::file::MappedFile;
+  use crate::*;
   use std::path::Path;
+
+  test_file();
+  return;
 
   let path: String = env::args().nth(1).expect("msg");
   let path: &Path = path.as_ref();
+
   // let mmap = <MappedFile as TryFrom<&Path>>::try_from(path.as_ref());
   let mmap = MappedFile::try_from(path).expect("expect MappedFile");
+  let slice = mmap.as_ref();
+
+  println!("{:#04X?}", &slice[0..4]);
+
   // mmap.close().expect("MappedFile close");
+
+  // println!("{:x?}", data); // lower case
+  // println!("{:X?}", data); // upper case
+  // println!("{:02X?}", data); // print the leading zero
+  // println!("{:#04X?}", data); // pretty modifier
 }
 
 use std::io::IsTerminal;
 // Read a usize value from a byte buffer:
-use std::mem;
+// use std::mem;
+
+/* use r#type::ElfType64;
 fn read_usize(x: &[u8]) -> usize {
   assert!(x.len() >= mem::size_of::<usize>());
   let ptr = x.as_ptr() as *const usize;
   unsafe { ptr.read_unaligned() }
 }
+ */

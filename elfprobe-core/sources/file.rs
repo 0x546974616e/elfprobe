@@ -8,14 +8,16 @@ use std::{io, ptr, slice};
 ///
 /// Create a read-only memory-mapped file.
 ///
-/// TODO: Better error message.
-///
 /// # Develope notes
 ///
-/// Mutable references `&mut T` are not `Copy` hence the reborrowing `$*`.
+/// Mutable references `&mut T` are not `Copy` hence the automatic
+/// [reborrowing][reborrowing] `$*` when [inlay hints][inlay_hints] are
+/// enabled.
 ///
-/// See https://haibane-tenshi.github.io/rust-reborrowing/
+/// [reborrowing]: https://haibane-tenshi.github.io/rust-reborrowing/
+/// [inlay_hints]: https://rust-analyzer.github.io/manual.html#inlay-hints
 ///
+// TODO: Better error message.
 pub struct MappedFile {
   data: *const libc::c_void,
   length: libc::size_t,
@@ -65,6 +67,7 @@ impl Deref for MappedFile {
   type Target = [u8];
 
   #[inline]
+  #[allow(clippy::needless_lifetimes)]
   // The lifetime is optional here but acts as a reminder that the output slice
   // must not outlive the mapped file.
   fn deref<'data>(&'data self) -> &'data [u8] {
@@ -74,6 +77,8 @@ impl Deref for MappedFile {
 
 impl AsRef<[u8]> for MappedFile {
   #[inline]
+  #[allow(clippy::needless_lifetimes)]
+  // Same as Deref, the lifetime acts as a reminder for the developer.
   fn as_ref<'data>(&'data self) -> &'data [u8] {
     self.deref()
   }
@@ -132,7 +137,7 @@ impl Drop for MappedFile {
       let result = unsafe {
         libc::munmap(
           // Address must be page-aligned.
-          // See libc::sysconf(libc::_SC_PAGESIZE)
+          // See libc::sysconf(libc::_SC_PAGESIZE).
           self.data.cast_mut(),
           self.length,
         )
