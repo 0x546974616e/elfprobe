@@ -48,7 +48,7 @@ pub trait Endianness:
   + EndianOperation<u64>
 {
   #[allow(unused)]
-  /// Returns the endianness long name (capitalized).
+  /// Returns the endianness long name (lower case).
   fn long_name() -> &'static str;
 
   #[allow(unused)]
@@ -102,7 +102,7 @@ impl_endian_operation!(BigEndian, "big", from_be, to_be);
 
 impl Endianness for BigEndian {
   fn long_name() -> &'static str {
-    "Big-endian"
+    "big-endian"
   }
 
   fn short_name() -> &'static str {
@@ -124,7 +124,7 @@ impl_endian_operation!(LittleEndian, "little", from_le, to_le);
 
 impl Endianness for LittleEndian {
   fn long_name() -> &'static str {
-    "Little-endian"
+    "little-endian"
   }
 
   fn short_name() -> &'static str {
@@ -137,10 +137,26 @@ mod tests {
   use super::*;
 
   macro_rules! test_endianness {
-    // It will be so much profitable to use sts::concat_idents!().
-    ($function: ident, $endian: ident, $type: ident, $initial: literal) => {
+    ($endian: ident, $module: ident) => {
+      mod $module {
+        use super::*;
+
+        // NOTE:
+        // Do no use -1 when testing endianness because -1 is a bit sequence of
+        // 1 and therefore has no impact on the endianness (same goes for 0).
+        test_endianness!($endian, i16, 0x1122);
+        test_endianness!($endian, u16, 0x1122);
+        test_endianness!($endian, i32, 0x1122_3344);
+        test_endianness!($endian, u32, 0x1122_3344);
+        test_endianness!($endian, i64, 0x1122_3344_5566_7788);
+        test_endianness!($endian, u64, 0x1122_3344_5566_7788);
+      }
+    };
+
+    // It will be so much profitable to use std::concat_idents!().
+    ($endian: ident, $type: ident, $initial: literal) => {
       #[test]
-      fn $function() {
+      fn $type() {
         let mut value;
         // The write/read function composition should return the initial value.
         // Native Endian -> Current Endian (maybe no-op) -> Native Endian
@@ -151,17 +167,6 @@ mod tests {
     };
   }
 
-  #[rustfmt::skip] test_endianness!(big_endian_i16_write_read, BigEndian, i16, 0x1122);
-  #[rustfmt::skip] test_endianness!(big_endian_u16_write_read, BigEndian, u16, 0x1122);
-  #[rustfmt::skip] test_endianness!(big_endian_i32_write_read, BigEndian, i32, 0x1122_3344);
-  #[rustfmt::skip] test_endianness!(big_endian_u32_write_read, BigEndian, u32, 0x1122_3344);
-  #[rustfmt::skip] test_endianness!(big_endian_i64_write_read, BigEndian, i64, 0x1122_3344_5566_7788);
-  #[rustfmt::skip] test_endianness!(big_endian_u64_write_read, BigEndian, u64, 0x1122_3344_5566_7788);
-
-  #[rustfmt::skip] test_endianness!(little_endian_i16_write_read, LittleEndian, i16, 0x1122);
-  #[rustfmt::skip] test_endianness!(little_endian_u16_write_read, LittleEndian, u16, 0x1122);
-  #[rustfmt::skip] test_endianness!(little_endian_i32_write_read, LittleEndian, i32, 0x1122_3344);
-  #[rustfmt::skip] test_endianness!(little_endian_u32_write_read, LittleEndian, u32, 0x1122_3344);
-  #[rustfmt::skip] test_endianness!(little_endian_i64_write_read, LittleEndian, i64, 0x1122_3344_5566_7788);
-  #[rustfmt::skip] test_endianness!(little_endian_u64_write_read, LittleEndian, u64, 0x1122_3344_5566_7788);
+  test_endianness!(BigEndian, big_endian);
+  test_endianness!(LittleEndian, little_endian);
 }
