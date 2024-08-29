@@ -15,19 +15,27 @@ macro_rules! create_primitive {
   ($struct: ident, $alias: ident, $type: ident, $inner: ty, $operation: ty) => {
     #[doc = concat!("An `", stringify!($inner), "` wrapper with runtime endianness.")]
     ///
-    /// I think it is convenient to bound the `Endianness` to the struct to then
-    /// access all struct's method without respecify the generic endianness
+    /// It's important that this structure is a zero-cost abstraction of its
+    /// original value, firstly because it's a simple wrapper to transform its
+    /// internal value according to the given endianness, and secondly because
+    /// this structure is going to be built directly from a memory-mapped region
+    /// (hence the POD requirement and the transparent representation).
+    ///
+    /// I think it is convenient to bound the [`Endianness`] to the struct to
+    /// then access all struct's method without respecify the generic endianness
     /// every time.
     ///
     /// Note that unaligned access is not safe. Some architectures (such as x86
     /// and x64) can work with unaligned values (albeit slowly), while others
     /// (such as ARM, POWER) cannot. See `unaligned` feature.
     ///
-    // TODO
-    // Zero-cost abstraction
-    // transparent
-    // partialeq: the operator must be sysmetric and transitive
-    // eq is a marker, (used by hash) operator must be reflexive, sysmetric, transitive
+    /// [`PartialEq`] requires the type to be sysmetric and transitive, and
+    /// [`Eq`] (a marker trait) requires the type to be, in addition, reflexive
+    /// (`PartialEq` is a super-trait of `Eq`):
+    /// - reflexive: `a == a` (remember that `NaN` != `NaN`)
+    /// - symmetric: `a == b` implies `b == a`
+    /// - transitive: `a == b` and `b == c` implies `a == c`
+    ///
     #[rustfmt::skip]
     #[allow(unused)]
     #[repr(transparent)]
@@ -147,10 +155,11 @@ mod unaligned {
 // ╩ ╩┴─┘┴┴ ┴└─┘
 
 #[cfg(not(feature = "unaligned"))]
-pub use aligned::*;
+pub use aligned::{I16, U16, I32, U32, I64, U64};
 
 #[cfg(feature = "unaligned")]
-pub use unaligned::*;
+/// `unaligned` feature is enabled by default.
+pub use unaligned::{I16, U16, I32, U32, I64, U64};
 
 // ╔╦╗┌─┐┌─┐┌┬┐┌─┐
 //  ║ ├┤ └─┐ │ └─┐

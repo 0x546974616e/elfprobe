@@ -108,8 +108,8 @@ fn main() {
   use crate::*;
   use std::path::Path;
 
-  test_file();
-  return;
+  // test_file();
+  // return;
 
   let path: String = env::args().nth(1).expect("msg");
   let path: &Path = path.as_ref();
