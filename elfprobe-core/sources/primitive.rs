@@ -12,30 +12,35 @@ use crate::pod::Pod;
 // ╚═╝┴└─└─┘┴ ┴ ┴ └─┘
 
 macro_rules! create_primitive {
-  ($struct: ident, $type: ident) => {
-    #[doc = concat!("An `", stringify!($type), "` wrapper with runtime endianness.")]
+  ($struct: ident, $alias: ident, $type: ident, $inner: ty, $operation: ty) => {
+    #[doc = concat!("An `", stringify!($inner), "` wrapper with runtime endianness.")]
     ///
     /// I think it is convenient to bound the `Endianness` to the struct to then
     /// access all struct's method without respecify the generic endianness
     /// every time.
     ///
-    // Or unaligned [u8; N]?
-    // https://doc.rust-lang.org/nightly/cargo/reference/features.html#feature-resolver-version-2
+    /// Note that unaligned access is not safe. Some architectures (such as x86
+    /// and x64) can work with unaligned values (albeit slowly), while others
+    /// (such as ARM, POWER) cannot. See `unaligned` feature.
+    ///
+    // TODO
     // Zero-cost abstraction
     // transparent
     // partialeq: the operator must be sysmetric and transitive
     // eq is a marker, (used by hash) operator must be reflexive, sysmetric, transitive
-    // TODO
     #[rustfmt::skip]
     #[allow(unused)]
     #[repr(transparent)]
     #[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub struct $struct<Endianness: self::Endianness>($type, PhantomData<Endianness>);
+    pub struct $struct<Endianness: self::Endianness>($inner, PhantomData<Endianness>);
 
     // Ensure that the type is POD.
     impl<Endianness: self::Endianness> Pod for $struct<Endianness> {}
 
-    impl_primitive_method!($struct, $type);
+    #[allow(unused)]
+    pub type $alias<Endianness> = $struct<Endianness>;
+
+    impl_primitive_method!($struct, $type, $operation);
     impl_primitive_format!($struct);
   };
 }
@@ -45,11 +50,11 @@ macro_rules! create_primitive {
 // ╩ ╩└─┘ ┴ ┴ ┴└─┘╶┴┘
 
 macro_rules! impl_primitive_method {
-  ($struct: ident, $type: ident) => {
+  ($struct: ident, $type: ident, $operation: ty) => {
     impl<Endianness: self::Endianness> From<$type> for $struct<Endianness> {
       #[inline]
       fn from(value: $type) -> Self {
-        Self(Endianness::write(value), PhantomData)
+        Self(<Endianness as $operation>::write(value), PhantomData)
       }
     }
 
@@ -57,13 +62,13 @@ macro_rules! impl_primitive_method {
       #[inline]
       #[allow(unused)]
       pub fn get(self) -> $type {
-        Endianness::read(self.0)
+        <Endianness as $operation>::read(self.0)
       }
 
       #[inline]
       #[allow(unused)]
       pub fn set(&mut self, value: $type) {
-        self.0 = Endianness::write(value);
+        self.0 = <Endianness as $operation>::write(value);
       }
     }
   };
@@ -103,16 +108,53 @@ macro_rules! impl_primitive_format {
   };
 }
 
-create_primitive!(I16, i16);
-create_primitive!(U16, u16);
-create_primitive!(I32, i32);
-create_primitive!(U32, u32);
-create_primitive!(I64, i64);
-create_primitive!(U64, u64);
+// ╔╦╗┌─┐┌─┐┬┌┐┌┌─┐
+//  ║║├┤ ├┤ ││││├┤
+// ═╩╝└─┘└  ┴┘└┘└─┘
 
-// ╔╦╗┌─┐┌─┐┌┬┐
-//  ║ ├┤ └─┐ │
-//  ╩ └─┘└─┘ ┴
+// #[doc(cfg(not(feature = "unaligned")))]
+#[cfg(any(doc, not(feature = "unaligned")))]
+#[rustfmt::skip]
+mod aligned {
+  use super::*;
+  use crate::endian::AlignedEndianOperation;
+
+  create_primitive!(AlignedI16, I16, i16, i16, AlignedEndianOperation<i16>);
+  create_primitive!(AlignedU16, U16, u16, u16, AlignedEndianOperation<u16>);
+  create_primitive!(AlignedI32, I32, i32, i32, AlignedEndianOperation<i32>);
+  create_primitive!(AlignedU32, U32, u32, u32, AlignedEndianOperation<u32>);
+  create_primitive!(AlignedI64, I64, i64, i64, AlignedEndianOperation<i64>);
+  create_primitive!(AlignedU64, U64, u64, u64, AlignedEndianOperation<u64>);
+}
+
+// #[doc(cfg(feature = "unaligned")]
+#[cfg(any(doc, feature = "unaligned"))]
+#[rustfmt::skip]
+mod unaligned {
+  use super::*;
+  use crate::endian::UnalignedEndianOperation;
+
+  create_primitive!(UnalignedI16, I16, i16, [u8; 2], UnalignedEndianOperation<i16, 2>);
+  create_primitive!(UnalignedU16, U16, u16, [u8; 2], UnalignedEndianOperation<u16, 2>);
+  create_primitive!(UnalignedI32, I32, i32, [u8; 4], UnalignedEndianOperation<i32, 4>);
+  create_primitive!(UnalignedU32, U32, u32, [u8; 4], UnalignedEndianOperation<u32, 4>);
+  create_primitive!(UnalignedI64, I64, i64, [u8; 8], UnalignedEndianOperation<i64, 8>);
+  create_primitive!(UnalignedU64, U64, u64, [u8; 8], UnalignedEndianOperation<u64, 8>);
+}
+
+// ╔═╗┬  ┬┌─┐┌─┐
+// ╠═╣│  │├─┤└─┐
+// ╩ ╩┴─┘┴┴ ┴└─┘
+
+#[cfg(not(feature = "unaligned"))]
+pub use aligned::*;
+
+#[cfg(feature = "unaligned")]
+pub use unaligned::*;
+
+// ╔╦╗┌─┐┌─┐┌┬┐┌─┐
+//  ║ ├┤ └─┐ │ └─┐
+//  ╩ └─┘└─┘ ┴ └─┘
 
 #[cfg(test)]
 mod tests {
@@ -120,6 +162,11 @@ mod tests {
   use crate::endian::*;
 
   macro_rules! test_primitive {
+    () => {
+      test_primitive!(BigEndian, big_endian);
+      test_primitive!(LittleEndian, little_endian);
+    };
+
     ($endian: ident, $module: ident) => {
       mod $module {
         use super::*;
@@ -140,6 +187,7 @@ mod tests {
         #[test]
         fn get() {
           let value = $struct::<$endian>::from($initial);
+          println!("{:?}, {}", value, value); // TODO: TMP
           assert_eq!(value.get(), $initial);
         }
 
@@ -160,6 +208,15 @@ mod tests {
     };
   }
 
-  test_primitive!(BigEndian, big_endian);
-  test_primitive!(LittleEndian, little_endian);
+  #[cfg(not(feature = "unaligned"))]
+  mod aligned {
+    use super::*;
+    test_primitive!();
+  }
+
+  #[cfg(feature = "unaligned")]
+  mod unaligned {
+    use super::*;
+    test_primitive!();
+  }
 }

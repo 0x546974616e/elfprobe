@@ -1,3 +1,6 @@
+// #![feature(trait_alias)]
+// #![feature(doc_cfg)]
+
 // https://users.rust-lang.org/t/how-to-fail-a-build-with-warnings/2687/10
 // https://rust-unofficial.github.io/patterns/anti_patterns/deny-warnings.html
 // https://doc.rust-lang.org/rustc/lints/index.html

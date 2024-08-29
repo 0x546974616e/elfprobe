@@ -36,10 +36,11 @@ pub trait Pod: 'static + Copy + Sized {}
 
 #[allow(unused_macros)]
 macro_rules! impl_pod {
-  ($($type: ident),+) => {
+  ($($bytes: literal),+, $($type: ident),+) => {
+    $(impl Pod for [u8; $bytes] {})+
     $(impl Pod for $type {})+
   };
 }
 
 // Implement POD trait for primitive types in order to be used by POD aggregates.
-impl_pod!(i8, u8, i16, u16, i32, u32, i64, u64);
+impl_pod!(2, 4, 8, i8, u8, i16, u16, i32, u32, i64, u64);

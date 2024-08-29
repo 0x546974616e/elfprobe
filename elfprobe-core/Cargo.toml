@@ -12,3 +12,10 @@ path = "sources/main.rs"
 
 [dependencies]
 libc = "0.2"
+
+# See feature options:
+# https://doc.rust-lang.org/cargo/reference/features.html
+# https://doc.rust-lang.org/nightly/cargo/reference/features.html#feature-resolver-version-2
+[features]
+unaligned = []
+default = [ "unaligned" ]

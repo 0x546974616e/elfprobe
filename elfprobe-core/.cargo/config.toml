@@ -1,3 +1,5 @@
 [alias]
 f = "fmt"
 tt = "test -- --nocapture"
+tu = "test --features unaligned"
+ta = "test --no-default-features"
