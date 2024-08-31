@@ -78,10 +78,13 @@ mod file;
 mod pod;
 mod primitive;
 mod reader;
-// mod r#type;
+
+#[cfg(any(test, doc, clippy))]
+mod hex;
 
 use std::io;
 
+#[allow(unused)]
 fn test_file() -> io::Result<()> {
   // assert!(1 == 0, "dada {}", "fafa");
 

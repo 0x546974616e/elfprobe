@@ -7,9 +7,9 @@ use crate::pod::Pod;
 // https://rust-exercises.com/100-exercises/04_traits/02_orphan_rule
 // https://stackoverflow.com/questions/25413201/how-do-i-implement-a-trait-i-dont-own-for-a-type-i-dont-own
 
-// ╔═╗┬─┐┌─┐┌─┐┌┬┐┌─┐
-// ║  ├┬┘├┤ ├─┤ │ ├┤
-// ╚═╝┴└─└─┘┴ ┴ ┴ └─┘
+// ╔═╗┌┬┐┬─┐┬ ┬┌─┐┌┬┐
+// ╚═╗ │ ├┬┘│ ││   │
+// ╚═╝ ┴ ┴└─└─┘└─┘ ┴
 
 macro_rules! create_primitive {
   ($struct: ident, $alias: ident, $type: ident, $inner: ty, $operation: ty) => {
@@ -29,13 +29,17 @@ macro_rules! create_primitive {
     /// and x64) can work with unaligned values (albeit slowly), while others
     /// (such as ARM, POWER) cannot. See `unaligned` feature.
     ///
-    /// [`PartialEq`] requires the type to be sysmetric and transitive, and
-    /// [`Eq`] (a marker trait) requires the type to be, in addition, reflexive
-    /// (`PartialEq` is a super-trait of `Eq`):
-    /// - reflexive: `a == a` (remember that `NaN` != `NaN`)
-    /// - symmetric: `a == b` implies `b == a`
-    /// - transitive: `a == b` and `b == c` implies `a == c`
-    ///
+    //
+    // DEVELOPER NOTES:
+    //
+    // [`PartialEq`] requires the type to be sysmetric and transitive, and
+    // [`Eq`] (a marker trait) requires the type to be, in addition, reflexive
+    // (`PartialEq` is a super-trait of `Eq`):
+    //
+    // - symmetric: `a == b` implies `b == a`
+    // - transitive: `a == b` and `b == c` implies `a == c`
+    // - reflexive: `a == a` (remember that `NaN` != `NaN`)
+    //
     #[rustfmt::skip]
     #[allow(unused)]
     #[repr(transparent)]
@@ -53,9 +57,9 @@ macro_rules! create_primitive {
   };
 }
 
-// ╔╦╗┌─┐┌┬┐┬ ┬┌─┐┌┬┐
-// ║║║├┤  │ ├─┤│ │ ││
-// ╩ ╩└─┘ ┴ ┴ ┴└─┘╶┴┘
+// ╔╦╗┌─┐┌┬┐┬ ┬┌─┐┌┬┐┌─┐
+// ║║║├┤  │ ├─┤│ │ ││└─┐
+// ╩ ╩└─┘ ┴ ┴ ┴└─┘╶┴┘└─┘
 
 macro_rules! impl_primitive_method {
   ($struct: ident, $type: ident, $operation: ty) => {
@@ -116,9 +120,9 @@ macro_rules! impl_primitive_format {
   };
 }
 
-// ╔╦╗┌─┐┌─┐┬┌┐┌┌─┐
-//  ║║├┤ ├┤ ││││├┤
-// ═╩╝└─┘└  ┴┘└┘└─┘
+// ╔═╗┬─┐┌─┐┌─┐┌┬┐┌─┐
+// ║  ├┬┘├┤ ├─┤ │ ├┤
+// ╚═╝┴└─└─┘┴ ┴ ┴ └─┘
 
 // #[doc(cfg(not(feature = "unaligned")))]
 #[cfg(any(doc, not(feature = "unaligned")))]
@@ -150,16 +154,16 @@ mod unaligned {
   create_primitive!(UnalignedU64, U64, u64, [u8; 8], UnalignedEndianOperation<u64, 8>);
 }
 
-// ╔═╗┬  ┬┌─┐┌─┐
-// ╠═╣│  │├─┤└─┐
-// ╩ ╩┴─┘┴┴ ┴└─┘
+// ╦ ╦┌─┐┌─┐
+// ║ ║└─┐├┤
+// ╚═╝└─┘└─┘
 
 #[cfg(not(feature = "unaligned"))]
-pub use aligned::{I16, U16, I32, U32, I64, U64};
+pub use aligned::{I16, I32, I64, U16, U32, U64};
 
 #[cfg(feature = "unaligned")]
 /// `unaligned` feature is enabled by default.
-pub use unaligned::{I16, U16, I32, U32, I64, U64};
+pub use unaligned::{I16, I32, I64, U16, U32, U64};
 
 // ╔╦╗┌─┐┌─┐┌┬┐┌─┐
 //  ║ ├┤ └─┐ │ └─┐
