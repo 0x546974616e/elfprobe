@@ -149,10 +149,7 @@ fn remove_comment(string: &str) -> &str {
 #[inline]
 #[allow(unused)]
 fn find_words(string: &str) -> impl Iterator<Item = &str> {
-  string
-    .lines()
-    .map(remove_comment)
-    .flat_map(str::split_whitespace)
+  string.lines().map(remove_comment).flat_map(str::split_whitespace)
 }
 
 ///

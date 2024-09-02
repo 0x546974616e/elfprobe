@@ -43,11 +43,7 @@ pub trait AlignedEndianOperation<Primitive: 'static + Copy + Sized> {
 ///
 /// See [`AlignedEndianOperation`] for more details.
 ///
-pub trait UnalignedEndianOperation<
-  Primitive: 'static + Copy + Sized,
-  const BYTES: usize,
->
-{
+pub trait UnalignedEndianOperation<Primitive: 'static + Copy + Sized, const BYTES: usize> {
   ///
   /// Convert a primitive value (`u8`, `i32`, `u64`...) as a bytes array from
   /// the implemented endianness to the target processor's endianness.
@@ -136,7 +132,7 @@ macro_rules! impl_endian_operation {
   };
 }
 
-#[rustfmt::skip]
+#[rustfmt::skip] // TODO: TMP
 macro_rules! impl_aligned_endian_operation {
   ($struct: ident, $endian: literal, $from: ident, $to: ident) => {
     impl_aligned_endian_operation!($struct, $endian, i16, $from, $to);
@@ -155,7 +151,7 @@ macro_rules! impl_aligned_endian_operation {
   };
 }
 
-#[rustfmt::skip]
+#[rustfmt::skip] // TODO: TMP
 macro_rules! impl_unaligned_endian_operation {
   ($struct: ident, $endian: literal, $from: ident, $to: ident) => {
     impl_unaligned_endian_operation!($struct, $endian, i16, 2, $from, $to);
@@ -174,7 +170,7 @@ macro_rules! impl_unaligned_endian_operation {
   };
 }
 
-#[rustfmt::skip]
+#[rustfmt::skip] // TODO: TMP
 macro_rules! impl_endian_operations {
   // NOTE: Macro can be exported (?):
   // pub(super) use impl_endian_operation;
@@ -205,14 +201,7 @@ macro_rules! impl_endian_operations {
 #[derive(Default, Copy, Clone, PartialEq, Eq)]
 pub struct BigEndian;
 
-impl_endian_operations!(
-  BigEndian,
-  "big",
-  from_be,
-  from_be_bytes,
-  to_be,
-  to_be_bytes
-);
+impl_endian_operations!(BigEndian, "big", from_be, from_be_bytes, to_be, to_be_bytes);
 
 impl Endianness for BigEndian {
   fn long_name() -> &'static str {
@@ -238,14 +227,7 @@ impl Endianness for BigEndian {
 #[derive(Default, Copy, Clone, PartialEq, Eq)]
 pub struct LittleEndian;
 
-impl_endian_operations!(
-  LittleEndian,
-  "little",
-  from_le,
-  from_le_bytes,
-  to_le,
-  to_le_bytes
-);
+impl_endian_operations!(LittleEndian, "little", from_le, from_le_bytes, to_le, to_le_bytes);
 
 impl Endianness for LittleEndian {
   fn long_name() -> &'static str {
@@ -288,7 +270,6 @@ mod tests {
         use super::*;
 
         #[test]
-        #[rustfmt::skip]
         fn aligned() {
           let mut value;
           // The write/read function composition should return the initial value.
@@ -299,7 +280,6 @@ mod tests {
         }
 
         #[test]
-        #[rustfmt::skip] // TODO: Wait for stable trait aliases.
         fn unaligned() {
           // The write/read function composition should return the initial value.
           // Native Endian -> Current Endian (maybe no-op) -> Native Endian

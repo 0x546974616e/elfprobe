@@ -90,7 +90,7 @@ where
   pub ei_class: ElfType::Uchar,
   pub ei_data: ElfType::Uchar,
   pub ei_version: ElfType::Uchar,
-  pub ei_osabi: ElfType::Uchar, // No specified in elf32 but ok.
+  pub ei_osabi: ElfType::Uchar,      // No specified in elf32 but ok.
   pub ei_abiversion: ElfType::Uchar, // No specified in elf32 but ok.
   pub ei_pad: [ElfType::Uchar; 7],
 }
@@ -100,11 +100,13 @@ fn test_elf_identification_memory_size() {
   use crate::endian::{BigEndian, LittleEndian};
   use std::mem::size_of;
 
-  // TODO TMP
-  #[rustfmt::skip] assert_eq!(size_of::<ElfIdentification::<BigEndian, ElfType32<BigEndian>>>(), 16, "32-bits");
-  #[rustfmt::skip] assert_eq!(size_of::<ElfIdentification::<BigEndian, ElfType64<BigEndian>>>(), 16, "64-bits");
-  #[rustfmt::skip] assert_eq!(size_of::<ElfIdentification::<LittleEndian, ElfType32<LittleEndian>>>(), 16, "32-bits");
-  #[rustfmt::skip] assert_eq!(size_of::<ElfIdentification::<LittleEndian, ElfType64<LittleEndian>>>(), 16, "64-bits");
+  type Identification32<Endianness> = ElfIdentification<Endianness, ElfType32<Endianness>>;
+  type Identification64<Endianness> = ElfIdentification<Endianness, ElfType64<Endianness>>;
+
+  assert_eq!(size_of::<Identification32<BigEndian>>(), 16, "BE 32-bits");
+  assert_eq!(size_of::<Identification64<BigEndian>>(), 16, "BE 64-bits");
+  assert_eq!(size_of::<Identification32<LittleEndian>>(), 16, "LE 32-bits");
+  assert_eq!(size_of::<Identification64<LittleEndian>>(), 16, "LE 64-bits");
 }
 
 ////////////////////////////////////////////////////////////////

@@ -40,7 +40,6 @@ macro_rules! create_primitive {
     // - transitive: `a == b` and `b == c` implies `a == c`
     // - reflexive: `a == a` (remember that `NaN` != `NaN`)
     //
-    #[rustfmt::skip]
     #[allow(unused)]
     #[repr(transparent)]
     #[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -126,7 +125,6 @@ macro_rules! impl_primitive_format {
 
 // #[doc(cfg(not(feature = "unaligned")))]
 #[cfg(any(doc, not(feature = "unaligned")))]
-#[rustfmt::skip]
 mod aligned {
   use super::*;
   use crate::endian::AlignedEndianOperation;
@@ -141,7 +139,6 @@ mod aligned {
 
 // #[doc(cfg(feature = "unaligned")]
 #[cfg(any(doc, feature = "unaligned"))]
-#[rustfmt::skip]
 mod unaligned {
   use super::*;
   use crate::endian::UnalignedEndianOperation;
