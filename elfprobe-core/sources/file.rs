@@ -6,6 +6,9 @@ use std::os::fd::{AsRawFd, RawFd};
 use std::path::Path;
 use std::{io, ptr, slice};
 
+// https://github.com/danburkert/memmap-rs
+// https://github.com/RazrFalcon/memmap2-rs/tree/master
+
 ///
 /// Create a read-only memory-mapped file.
 ///
