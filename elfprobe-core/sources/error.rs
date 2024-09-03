@@ -10,16 +10,15 @@ pub type Result<T> = result::Result<T, Box<dyn error::Error>>;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum BytesError {
+  /// The given bytes array is empty.
   Empty,
-  SizeOfMismatch {
-    length: usize,
-    size_of: usize,
-  },
+
+  /// Bytes array size is not equal to the output type size.
+  SizeOfMismatch { length: usize, size_of: usize },
+
+  /// Bytes array pointer is not aligned with the output type.
   #[allow(unused)] // Only used when cfg(not(feature = "unaligned"))
-  AlignOfMismatch {
-    pointer: usize,
-    align_of: usize,
-  },
+  AlignOfMismatch { pointer: usize, align_of: usize },
 }
 
 impl fmt::Display for BytesError {

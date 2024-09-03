@@ -12,6 +12,7 @@ path = "sources/main.rs"
 
 [dependencies]
 libc = "0.2"
+elfprobe-macro = { path = "../elfprobe-macro" }
 
 # See feature options:
 # https://doc.rust-lang.org/cargo/reference/features.html

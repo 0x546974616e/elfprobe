@@ -87,6 +87,7 @@ use std::io;
 
 #[allow(unused)]
 fn test_file() -> io::Result<()> {
+  use std::io::IsTerminal;
   // assert!(1 == 0, "dada {}", "fafa");
 
   let path: String = env::args()
@@ -115,14 +116,18 @@ fn main() {
   // test_file();
   // return;
 
-  let path: String = env::args().nth(1).expect("msg");
+  let path: String = env::args().nth(1).expect("File missing");
   let path: &Path = path.as_ref();
 
   // let mmap = <MappedFile as TryFrom<&Path>>::try_from(path.as_ref());
   let mmap = MappedFile::try_from(path).expect("expect MappedFile");
   let slice = mmap.as_ref();
 
-  println!("{:#04X?}", &slice[0..4]);
+  // println!("{:#04X?}", &slice[0..4]);
+
+  use crate::elf::parse_elf;
+
+  println!("{:#x?}", parse_elf(slice));
 
   // mmap.close().expect("MappedFile close");
 
@@ -132,7 +137,6 @@ fn main() {
   // println!("{:#04X?}", data); // pretty modifier
 }
 
-use std::io::IsTerminal;
 // Read a usize value from a byte buffer:
 // use std::mem;
 

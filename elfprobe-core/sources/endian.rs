@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 // ╔═╗┌─┐┌─┐┬─┐┌─┐┌┬┐┬┌─┐┌┐┌┌─┐
 // ║ ║├─┘├┤ ├┬┘├─┤ │ ││ ││││└─┐
 // ╚═╝┴  └─┘┴└─┴ ┴ ┴ ┴└─┘┘└┘└─┘
@@ -77,6 +79,8 @@ pub trait Endianness:
   + Copy
   + Eq
   + PartialEq
+  + Default
+  + Debug
   // I'm not particularly fond of this approach.
   + AlignedEndianOperation<i16>
   + AlignedEndianOperation<u16>
@@ -198,7 +202,7 @@ macro_rules! impl_endian_operations {
 /// runtime. The `BigEndian` struct is a ZST (Zero-Sized Type) designed to be
 /// used with the [`Endianness`] trait as a generic type.
 ///
-#[derive(Default, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub struct BigEndian;
 
 impl_endian_operations!(BigEndian, "big", from_be, from_be_bytes, to_be, to_be_bytes);
@@ -224,7 +228,7 @@ impl Endianness for BigEndian {
 /// runtime. The `LittleEndian` struct is a ZST (Zero-Sized Type) designed to be
 /// used with the [`Endianness`] trait as a generic type.
 ///
-#[derive(Default, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub struct LittleEndian;
 
 impl_endian_operations!(LittleEndian, "little", from_le, from_le_bytes, to_le, to_le_bytes);
