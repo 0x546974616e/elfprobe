@@ -7,7 +7,7 @@ fn to_capitalized(string: &str) -> String {
   let mut chars = string.chars();
 
   result.extend(chars.by_ref().take(1).flat_map(|c| c.to_uppercase()));
-  result.extend(chars);
+  result.extend(chars); // chars.flat_map(|c| c.to_lowercase())
 
   result
 }
@@ -15,6 +15,9 @@ fn to_capitalized(string: &str) -> String {
 // ╔═╗┬─┐┬─┐┌─┐┬─┐
 // ║╣ ├┬┘├┬┘│ │├┬┘
 // ╚═╝┴└─┴└─└─┘┴└─
+
+// TODO:
+// Rewrite ChunkError and ParseHexError.
 
 // NOTE:
 // Wrapping errors has been deliberately chosen instead boxing them (Box<dyn>)

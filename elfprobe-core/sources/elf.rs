@@ -135,3 +135,16 @@ where
 }
 
 ////////////////////////////////////////////////////////////////
+
+use crate::reader::Reader;
+
+fn elf_parser<'data, Endianness, ElfType>(data: impl Reader<'data>) -> ElfHeader<Endianness, ElfType>
+where
+  Endianness: self::Endianness,
+  ElfType: self::ElfType<Endianness>,
+{
+  todo!()
+}
+
+// Program header/table
+// Section header/table

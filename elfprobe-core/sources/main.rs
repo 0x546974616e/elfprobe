@@ -74,6 +74,7 @@ use std::fs::File;
 // mod MappedFile;
 mod elf;
 mod endian;
+mod error;
 mod file;
 mod pod;
 mod primitive;

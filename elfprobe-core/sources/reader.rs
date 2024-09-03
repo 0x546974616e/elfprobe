@@ -1,3 +1,8 @@
+use std::mem::size_of;
+
+use crate::error::BytesError;
+use crate::pod::Pod;
+
 ///
 /// Declare a trait to abstract the reading of data or data blocks. In this way,
 /// `Reader` implementors can load data from heap-allocated memory or
@@ -55,6 +60,18 @@ pub trait Reader<'data>: Copy + Clone {
   #[allow(unused)]
   /// Returns the total length, this description is useless because it's obvious.
   fn length(self) -> usize;
+
+  #[allow(unused)]
+  fn read_bytes(self, size: usize, offset: usize) -> Option<&'data [u8]>;
+
+  #[allow(unused)]
+  fn read_pod<Type: Pod>(self, offset: usize) -> Result<&'data Type, BytesError> {
+    match self.read_bytes(size_of::<Type>(), offset) {
+      // TODO: Technically, it is not empty because it does not exist.
+      None => Err(BytesError::Empty),
+      Some(bytes) => Type::from_bytes(bytes),
+    }
+  }
 }
 
 ///
@@ -66,5 +83,63 @@ impl<'data> Reader<'data> for &'data [u8] {
   #[inline]
   fn length(self) -> usize {
     self.len()
+  }
+
+  fn read_bytes(self, size: usize, offset: usize) -> Option<&'data [u8]> {
+    self.get(offset..offset + size)
+  }
+}
+
+// ╔╦╗┌─┐┌─┐┌┬┐┌─┐
+//  ║ ├┤ └─┐ │ └─┐
+//  ╩ └─┘└─┘ ┴ └─┘
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use std::mem::{align_of, offset_of};
+
+  #[test]
+  fn read_bytes() {
+    let slice: &[u8] = &[1, 2, 3, 4, 5, 6];
+    let bytes = <&[u8] as Reader<'_>>::read_bytes(slice, 3, 2);
+    assert_eq!(bytes, Some(&[3u8, 4u8, 5u8] as &[u8]));
+  }
+
+  #[test]
+  fn read_pod() {
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    struct Dada {
+      a: u8,
+      b: u64,
+    }
+
+    impl Pod for Dada {}
+
+    impl Default for Dada {
+      fn default() -> Self {
+        Self {
+          a: 0xA0u8,
+          // The byte order has no effect this way.
+          b: 0xB0B0B0B0B0B0B0B0u64,
+        }
+      }
+    }
+
+    assert_eq!(size_of::<Dada>(), 16);
+    assert_eq!(align_of::<Dada>(), 8);
+    assert_eq!(offset_of!(Dada, a), 0);
+    assert_eq!(offset_of!(Dada, b), 8);
+
+    let bytes: [u8; 8 + 16] = [
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // offset
+      0xA0, // a
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // align
+      0xB0, 0xB0, 0xB0, 0xB0, 0xB0, 0xB0, 0xB0, 0xB0, // bb
+    ];
+
+    let dada = bytes.read_pod::<Dada>(8);
+    assert_eq!(Ok(&Dada::default()), dada);
   }
 }

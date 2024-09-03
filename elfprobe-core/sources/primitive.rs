@@ -124,7 +124,7 @@ macro_rules! impl_primitive_format {
 // ╚═╝┴└─└─┘┴ ┴ ┴ └─┘
 
 // #[doc(cfg(not(feature = "unaligned")))]
-#[cfg(any(doc, not(feature = "unaligned")))]
+#[cfg(any(clippy, doc, not(feature = "unaligned")))]
 mod aligned {
   use super::*;
   use crate::endian::AlignedEndianOperation;
@@ -138,7 +138,7 @@ mod aligned {
 }
 
 // #[doc(cfg(feature = "unaligned")]
-#[cfg(any(doc, feature = "unaligned"))]
+#[cfg(any(clippy, doc, feature = "unaligned"))]
 mod unaligned {
   use super::*;
   use crate::endian::UnalignedEndianOperation;

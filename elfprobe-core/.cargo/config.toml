@@ -1,5 +1,6 @@
 [alias]
 f = "fmt"
+cl = "clippy"
 tt = "test -- --nocapture"
 tu = "test --features unaligned"
 ta = "test --no-default-features"
