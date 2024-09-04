@@ -1,0 +1,78 @@
+
+# How to `#[derive(Pod)]`
+
+> "Oh it's by dtolnay, I feel much better." (Twitter)
+
+Even from [David Tolnay][dtolnay], I do not want any non-standard external
+library, especially for something that should be standard...
+
+[dtolnay]: https://github.com/dtolnay
+
+1. `Cargo.toml`
+
+`cargo new elfprobe-macro --lib --vcs none`
+
+```toml
+[package]
+name = "elfprobe-macro"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "elfprobe_macro"
+path = "sources/library.rs"
+proc-macro = true
+
+[dependencies]
+[dependencies.syn]
+version = "2.0"
+default-features = false
+features = [
+  "derive",
+  "parsing",
+  "printing",
+  "proc-macro",
+]
+[dependencies.quote]
+version = "1.0"
+default-features = false
+```
+
+2. `sources/library.rs`
+
+```rust
+use proc_macro::TokenStream;
+use quote::quote;
+use syn;
+
+#[proc_macro_derive(Pod)]
+pub fn pod_derive(input: TokenStream) -> TokenStream {
+  let ast = syn::parse(input).unwrap();
+  impl_pod_derive(&ast)
+}
+
+fn impl_pod_derive(ast: &syn::DeriveInput) -> TokenStream {
+  let name = &ast.ident;
+  let (impl_generics, type_generics, where_clause) = ast.generics.split_for_impl();
+  let expanded = quote! {
+    impl #impl_generics crate::pod::Pod for #name #type_generics #where_clause {}
+  };
+  expanded.into()
+}
+```
+
+3. `tests/test_macro.rs`
+
+```rust
+#[test]
+fn dada() {
+  #[allow(unused)]
+  use elfprobe_macro::Pod;
+  use std::fmt::Display;
+
+  #[allow(unused)]
+  #[derive(Pod)]
+  struct Dada<T: Default, U>(T, U)
+    where U: Display;
+}
+```

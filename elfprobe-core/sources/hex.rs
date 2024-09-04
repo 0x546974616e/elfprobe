@@ -57,7 +57,7 @@ impl<'guilty> fmt::Display for ChunkError<'guilty> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ParseHexError<'guilty> {
+pub enum HexError<'guilty> {
   /// Chunk-related errors.
   ChunkError(ChunkError<'guilty>),
 
@@ -68,7 +68,7 @@ pub enum ParseHexError<'guilty> {
   InvalidWordLength(&'guilty str),
 }
 
-impl<'guilty> error::Error for ParseHexError<'guilty> {
+impl<'guilty> error::Error for HexError<'guilty> {
   fn source(&self) -> Option<&(dyn error::Error + 'static)> {
     match self {
       // Self::ChunkError(ref error) => Some(error),
@@ -78,7 +78,7 @@ impl<'guilty> error::Error for ParseHexError<'guilty> {
   }
 }
 
-impl<'guilty> fmt::Display for ParseHexError<'guilty> {
+impl<'guilty> fmt::Display for HexError<'guilty> {
   fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
     match self {
       Self::ChunkError(error) => error.fmt(formatter),
@@ -180,7 +180,7 @@ fn find_words(string: &str) -> impl Iterator<Item = &str> {
 /// ```
 ///
 #[allow(unused)]
-pub fn parse_hex(string: &str) -> Result<Vec<u8>, ParseHexError> {
+pub fn hex(string: &str) -> Result<Vec<u8>, HexError> {
   // I find this function still amateurish in its use of Rust,
   // how to improve it? Is it necessary? (readability first)
   let mut buffer: Vec<u8> = Vec::new();
@@ -192,7 +192,7 @@ pub fn parse_hex(string: &str) -> Result<Vec<u8>, ParseHexError> {
 
     // TODO: % 2
     if word.len() == 1 {
-      return Err(ParseHexError::InvalidWordLength(word));
+      return Err(HexError::InvalidWordLength(word));
     }
 
     if word.starts_with('.') {
@@ -211,12 +211,12 @@ pub fn parse_hex(string: &str) -> Result<Vec<u8>, ParseHexError> {
           match u8::from_str_radix(digits, 16) {
             Ok(hex) => buffer.push(hex),
             Err(error) => {
-              return Err(ParseHexError::ParseError(error, digits));
+              return Err(HexError::ParseError(error, digits));
             }
           }
         }
       }
-      Err(error) => return Err(ParseHexError::ChunkError(error)),
+      Err(error) => return Err(HexError::ChunkError(error)),
     }
   }
 
@@ -235,7 +235,7 @@ mod tests {
     ($name: ident, $string: literal, $($bytes: literal),+ $(,)?) => {
       #[test]
       fn $name() {
-        assert_eq!(parse_hex($string).unwrap(), vec![$($bytes),+])
+        assert_eq!(hex($string).unwrap(), vec![$($bytes),+])
       }
     };
   }
@@ -245,7 +245,7 @@ mod tests {
       #[test]
       fn $name() {
         // Extract error to string because ParseIntError is not buildable.
-        assert_eq!(parse_hex($string).unwrap_err().to_string(), $error);
+        assert_eq!(hex($string).unwrap_err().to_string(), $error);
       }
     };
   }

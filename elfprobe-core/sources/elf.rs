@@ -9,8 +9,6 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::marker::PhantomData;
 
-use elfprobe_macro::Pod;
-
 use crate::endian::{BigEndian, Endianness, LittleEndian};
 use crate::error::BytesError;
 use crate::pod::Pod;
@@ -70,8 +68,9 @@ pub trait ElfType: Type {
   type Word: Type;
 }
 
-#[derive(Debug, Default, Copy, Clone, Pod)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ElfType32<E: self::Endianness>(PhantomData<E>);
+impl<E: self::Endianness> Pod for ElfType32<E> {}
 impl<E: self::Endianness> ElfType for ElfType32<E> {
   type Endian = E;
   type Addr = Elf32_Addr<E>;
@@ -82,8 +81,9 @@ impl<E: self::Endianness> ElfType for ElfType32<E> {
   type Word = Elf32_Word<E>;
 }
 
-#[derive(Debug, Default, Copy, Clone, Pod)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ElfType64<E: self::Endianness>(PhantomData<E>);
+impl<E: self::Endianness> Pod for ElfType64<E> {}
 impl<E: self::Endianness> ElfType for ElfType64<E> {
   type Endian = E;
   type Addr = Elf64_Addr<E>;
@@ -99,7 +99,7 @@ impl<E: self::Endianness> ElfType for ElfType64<E> {
 // ╚═╝ ┴ ┴└─└─┘└─┘ ┴
 
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Pod)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ElfIdentification<ElfType: self::ElfType> {
   pub ei_mag0: ElfType::Uchar,
   pub ei_mag1: ElfType::Uchar,
@@ -112,6 +112,9 @@ pub struct ElfIdentification<ElfType: self::ElfType> {
   pub ei_abiversion: ElfType::Uchar, // No specified in elf32 but ok.
   pub ei_pad: [ElfType::Uchar; 7],
 }
+
+// Ensure that type is POD.
+impl <ElfType: self::ElfType> Pod for ElfIdentification<ElfType> {}
 
 #[test]
 fn test_elf_identification_memory_size() {
@@ -128,7 +131,7 @@ fn test_elf_identification_memory_size() {
 }
 
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Pod)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ElfHeader<ElfType: self::ElfType> {
   pub e_ident: ElfIdentification<ElfType>,
   pub e_type: ElfType::Half,
@@ -146,6 +149,9 @@ pub struct ElfHeader<ElfType: self::ElfType> {
   pub e_shstrndx: ElfType::Half,
 }
 
+// Ensure that type is POD.
+impl <ElfType: self::ElfType> Pod for ElfHeader<ElfType> {}
+
 // ╔═╗┬┬  ┌─┐
 // ╠╣ ││  ├┤
 // ╚  ┴┴─┘└─┘
@@ -153,7 +159,7 @@ pub struct ElfHeader<ElfType: self::ElfType> {
 use crate::reader::Reader;
 
 #[cfg(any(test, doc, clippy))]
-use crate::hex::parse_hex;
+use crate::hex::hex;
 
 // #[derive(Debug)]
 pub struct _ElfFile<'data, Reader, ElfType>
@@ -224,7 +230,7 @@ where
 
 #[test]
 fn parser() {
-  let bytes = parse_hex(
+  let bytes = hex(
     r"
       7F 'ELF ; Magic
       01 ; ei_class
