@@ -1,10 +1,24 @@
 
-# How to `#[derive(Pod)]`
+# elfprobe-macro
+
+Export all [procedural macros][proc_macro] for the entire project.
+
+[proc_macro]: https://doc.rust-lang.org/reference/procedural-macros.html
+
+## How to `#[derive(Pod)]`
+
+Here two solutions to implement the `Pod` derive macro.
+
+### Solution 1: Write a `TokenStream` parser by hand from scratch
+
+See [`sources/`](./sources/).
+
+### Solution 2: Use `syn` and `quote`
 
 > "Oh it's by dtolnay, I feel much better." (Twitter)
 
-Even from [David Tolnay][dtolnay], I do not want any non-standard external
-library, especially for something that should be standard...
+(Even from [David Tolnay][dtolnay], I do not want any non-standard external
+library, especially for something that should be standard...)
 
 [dtolnay]: https://github.com/dtolnay
 

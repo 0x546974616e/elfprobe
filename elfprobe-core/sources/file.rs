@@ -1,4 +1,4 @@
-use libc; // extern crate libc ??
+extern crate libc;
 
 use std::fs::File;
 use std::ops::Deref;
@@ -8,6 +8,7 @@ use std::{io, ptr, slice};
 
 // https://github.com/danburkert/memmap-rs
 // https://github.com/RazrFalcon/memmap2-rs/tree/master
+// https://doc.rust-lang.org/reference/items/extern-crates.html
 
 ///
 /// Create a read-only memory-mapped file.

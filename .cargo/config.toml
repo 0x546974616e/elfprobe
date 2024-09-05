@@ -1,0 +1,4 @@
+[alias]
+f = "fmt"
+cl = "clippy"
+tt = "test -- --nocapture"

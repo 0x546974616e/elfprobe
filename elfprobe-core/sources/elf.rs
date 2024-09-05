@@ -114,7 +114,7 @@ pub struct ElfIdentification<ElfType: self::ElfType> {
 }
 
 // Ensure that type is POD.
-impl <ElfType: self::ElfType> Pod for ElfIdentification<ElfType> {}
+impl<ElfType: self::ElfType> Pod for ElfIdentification<ElfType> {}
 
 #[test]
 fn test_elf_identification_memory_size() {
@@ -150,7 +150,7 @@ pub struct ElfHeader<ElfType: self::ElfType> {
 }
 
 // Ensure that type is POD.
-impl <ElfType: self::ElfType> Pod for ElfHeader<ElfType> {}
+impl<ElfType: self::ElfType> Pod for ElfHeader<ElfType> {}
 
 // ╔═╗┬┬  ┌─┐
 // ╠╣ ││  ├┤
@@ -214,11 +214,11 @@ where
   match data.read_bytes(2, 4) {
     None => Err(BytesError::Empty), // TODO: TMP Err("No class/data"),
     Some(format) => {
-      match format {
-        &[1, 1] => Ok(ElfFile::Elf32Le(_ElfFile::parse(data)?)),
-        &[2, 1] => Ok(ElfFile::Elf64Le(_ElfFile::parse(data)?)),
-        &[1, 2] => Ok(ElfFile::Elf32Be(_ElfFile::parse(data)?)),
-        &[2, 2] => Ok(ElfFile::Elf64Be(_ElfFile::parse(data)?)),
+      match *format {
+        [1, 1] => Ok(ElfFile::Elf32Le(_ElfFile::parse(data)?)),
+        [2, 1] => Ok(ElfFile::Elf64Le(_ElfFile::parse(data)?)),
+        [1, 2] => Ok(ElfFile::Elf32Be(_ElfFile::parse(data)?)),
+        [2, 2] => Ok(ElfFile::Elf64Be(_ElfFile::parse(data)?)),
         _ => Err(BytesError::Empty), // TODO: TMP Err("Bad class/data"),
       }
     }
