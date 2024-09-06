@@ -1,4 +1,5 @@
 mod cursor;
+mod either;
 mod token;
 
 use proc_macro::TokenStream;
@@ -19,11 +20,17 @@ pub fn pod_derive(input: TokenStream) -> TokenStream {
   println!("prev {:?}", cursor.prev());
   println!("prev {:?}", cursor.prev());
   println!("prev {:?}", cursor.prev());
+  println!("prev {:?}", cursor.prev());
   println!("next {:?}", cursor.next());
   println!("next {:?}", cursor.next());
   println!("prev {:?}", cursor.prev());
   println!("next {:?}", cursor.next());
   println!("next {:?}", cursor.next());
   println!("next {:?}", cursor.next());
+  println!("========================");
+  println!("next {:?}", cursor.next());
+  println!("next {:?}", cursor.next());
+  println!("next {:?}", cursor.next());
+  println!("prev {:?}", cursor.prev());
   TokenStream::new()
 }
