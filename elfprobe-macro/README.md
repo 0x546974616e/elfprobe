@@ -11,9 +11,9 @@ Here two solutions to implement the `Pod` derive macro.
 
 ### Solution 1: Write a `TokenStream` parser by hand from scratch
 
-See [`sources/`](./sources/).
+See [`sources/`](./sources/) (still WIP).
 
-### Solution 2: Use `syn` and `quote`
+### Solution 2: Use `syn` and `quote` crates
 
 > "Oh it's by dtolnay, I feel much better." (Twitter)
 

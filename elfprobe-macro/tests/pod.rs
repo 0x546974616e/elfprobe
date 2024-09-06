@@ -4,4 +4,5 @@ fn pod_derive() {
 
   #[derive(Pod)]
   struct Dada;
+  let _ = Dada;
 }
