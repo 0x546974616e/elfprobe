@@ -1,5 +1,4 @@
 #![allow(clippy::needless_pub_self)]
-#![allow(unused)] // TODO: Temporary
 
 use proc_macro::TokenStream;
 

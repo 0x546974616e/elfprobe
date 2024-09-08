@@ -1,7 +1,5 @@
-use std::ops::Range;
-
 use proc_macro::TokenStream;
-use proc_macro::TokenTree;
+use std::ops::Range;
 
 use crate::cursor::Cursor;
 use crate::entry::Entry;

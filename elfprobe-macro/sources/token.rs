@@ -1,8 +1,6 @@
 use proc_macro::TokenTree;
 use std::fmt;
 
-use crate::cursor::Cursor;
-
 use crate::entry::Delimiter;
 use crate::entry::Group;
 use crate::entry::Identifier;

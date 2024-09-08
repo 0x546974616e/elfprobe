@@ -3,17 +3,14 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::ops::Range;
 
+use crate::buffer::Buffer;
 use crate::entry::Entry;
 use crate::entry::Group;
 use crate::entry::Identifier;
 use crate::entry::Literal;
 use crate::entry::Punctuation;
-
 use crate::parser::Parse;
 use crate::parser::Peek;
-use crate::parser::Stream;
-
-use crate::buffer::Buffer;
 
 // ╦ ╦┌─┐┌─┐┌┬┐
 // ╠═╣├┤ ├─┤ ││
@@ -22,7 +19,7 @@ use crate::buffer::Buffer;
 #[derive(Copy, Clone, Debug)]
 pub(self) struct Head {
   pub current: *const Entry,
-  pub start: *const Entry,
+  // pub start: *const Entry,
   pub stop: *const Entry,
 }
 
@@ -31,7 +28,7 @@ impl Head {
     let Range { start, end: stop } = range;
     Head {
       current: start,
-      start,
+      // start: start,
       stop,
     }
   }
@@ -131,12 +128,14 @@ impl<'buffer> Cursor<'buffer> {
 
 // For convenientness.
 impl<'buffer> Cursor<'buffer> {
+  #[allow(unused)]
   #[inline(always)]
   // Parses and moves the cursor.
   pub(crate) fn parse<Type: Parse>(&'buffer self) -> Option<Type> {
     Type::parse(self)
   }
 
+  #[allow(unused)]
   #[inline(always)]
   // Peek and does not move the cursor.
   pub(crate) fn peek<Type: Peek>(&'buffer self) -> bool {

@@ -8,9 +8,9 @@ use proc_macro::TokenTree;
 use crate::buffer::Buffer;
 use crate::entry::Group;
 use crate::entry::Identifier;
-use crate::parser::GenericParams;
-use crate::parser::OuterAttribute;
-use crate::parser::Visibility;
+use crate::parser::attributes::OuterAttribute;
+use crate::parser::generics::GenericParams;
+use crate::parser::visibilities::Visibility;
 use crate::token::Token;
 
 ///
@@ -76,8 +76,9 @@ pub(crate) fn derive(stream: TokenStream, traitt: &str) -> TokenStream {
   }
 
   // 10. Build the TokenStream.
-  /// pub struct #GENERICS Dada() where #WHERE;
-  /// impl #IMPL_GENERICS Pod for Dada #TYPE_GENERICS where #WHERE {}
+
+  //// pub struct #GENERICS Dada() where #WHERE;
+  //// impl #IMPL_GENERICS Pod for Dada #TYPE_GENERICS where #WHERE {}
   let mut derive = TokenStream::new();
 
   // 11. "impl" keyworkd
