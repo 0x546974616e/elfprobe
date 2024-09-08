@@ -13,4 +13,5 @@
 
 ## elfprobe-macro
 
-- [ ] Make a wrapper of `Entry`/`TokenTree` that stores to_string() returned value?
+- [ ] Make a wrapper of `Entry`/`TokenTree` that stores to_string() returned value? (useless for far)
+- [ ] Parse must return an error.

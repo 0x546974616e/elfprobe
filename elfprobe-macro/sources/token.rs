@@ -1,71 +1,160 @@
+use std::fmt;
+
 use crate::cursor::Cursor;
+
+use crate::entry::Delimiter;
+use crate::entry::Group;
 use crate::entry::Identifier;
+use crate::entry::Punctuation;
+
 use crate::parser::Parse;
 use crate::parser::Peek;
 use crate::parser::Stream;
 
+macro_rules! create_token {
+  (
+    struct $name: ident($token: ident) when
+      token.$method: ident() is $expr1: expr $(, but $expr2: expr)?
+  ) => {
+    pub(crate) struct $name {
+      // Store a Span instead?
+      // Ident::span(), Ident::set_span(), Ident::new()
+      // Wrap to_string() result?
+      pub token: $token,
+    }
+
+    impl From<$token> for $name {
+      #[inline(always)]
+      fn from(token: $token) -> Self {
+        Self { token }
+      }
+    }
+
+    impl fmt::Debug for $name {
+      fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.token.to_string().fmt(formatter)
+        // self.token.fmt(formatter)
+      }
+    }
+
+    impl Peek for $name {
+      // Does not move the cursor.
+      fn peek(stream: Stream) -> bool {
+        // match Take::<$token>::entry(stream) {
+        match stream.take::<$token>() {
+          None => false,
+          Some((token, _)) => {
+            let value = token.$method();
+            value == $expr1 $(&& value != $expr2)?
+          }
+        }
+      }
+    }
+
+    impl Parse for $name {
+      // Does move the cursor.
+      fn parse(stream: Stream) -> Option<Self> {
+        let (token, next) = stream.take::<$token>()?;
+        let value = token.$method();
+        if value == $expr1 $(&& value != $expr2)? {
+          stream.merge(next); // Move the cursor.
+          Some(Self::from(token.clone()))
+        } else { None }
+      }
+    }
+
+  };
+}
+
+// ╦╔═┌─┐┬ ┬┬ ┬┌─┐┬─┐┌┬┐
+// ╠╩╗├┤ └┬┘││││ │├┬┘ ││
+// ╩ ╩└─┘ ┴ └┴┘└─┘┴└─╶┴┘
+
 macro_rules! define_keywords {
-  ($(struct $name: ident $token: literal)*) => {
+  ($(struct $name: ident = $token: literal)*) => {
     $(
-      #[derive(Debug)]
-      pub(crate) struct $name {
-        pub identifier: Identifier,
-      }
-
-      impl From<Identifier> for $name {
-        fn from(identifier: Identifier) -> Self {
-          Self { identifier }
-        }
-      }
-
-      impl Peek for $name {
-        // Does not move the cursor.
-        fn peek(stream: Stream) -> bool {
-          match stream.identifier() {
-            None => false,
-            Some((identifier, _)) => {
-              // TODO: Wrap token to cache to_string() result?
-              identifier.to_string() == $token
-            }
-          }
-        }
-      }
-
-      impl Parse for $name {
-        // Does move the cursor.
-        fn parse(stream: Stream) -> Option<Self> {
-          match stream.identifier() {
-            Some((identifier, next)) if identifier.to_string() == $token => {
-              stream.merge(next); // Move the cursor.
-              Some(Self::from(identifier.clone()))
-            }
-            _ => None
-          }
-        }
+      create_token! {
+        struct $name(Identifier) when token.to_string() is $token
       }
     )*
   };
 }
 
 define_keywords! {
-  struct Crate "crate"
-  struct Enum "enum"
-  struct Pub "pub"
-  struct SelfType "Self"
-  struct SelfValue "self"
-  struct Struct "struct"
-  struct Super "super"
+  struct Const = "const"
+  struct Pub = "pub"
+  struct Struct = "struct"
+  struct Where = "where"
 }
+
+// ╔═╗┬─┐┌─┐┬ ┬┌─┐
+// ║ ╦├┬┘│ ││ │├─┘
+// ╚═╝┴└─└─┘└─┘┴
+
+macro_rules! define_groups {
+  ($(struct $name: ident)*) => {
+    $(
+      create_token! {
+        struct $name(Group) when token.delimiter() is Delimiter::$name
+      }
+    )*
+  };
+}
+
+define_groups! {
+  struct Parenthesis
+  struct Brace
+  struct Bracket
+}
+
+// ╔═╗┬ ┬┌┐┌┌─┐┌┬┐┬ ┬┌─┐┌┬┐┬┌─┐┌┐┌
+// ╠═╝│ │││││   │ │ │├─┤ │ ││ ││││
+// ╩  └─┘┘└┘└─┘ ┴ └─┘┴ ┴ ┴ ┴└─┘┘└┘
+
+macro_rules! define_punctuation {
+  ($(struct $name: ident = $punctuation: literal)*) => {
+    $(
+      create_token! {
+        struct $name(Punctuation) when token.as_char() is $punctuation //, but '\''
+      }
+    )*
+  };
+}
+
+define_punctuation! {
+  struct Colon = ':'
+  struct Comma = ','
+  struct Gt = '>'
+  struct Hash = '#'
+  struct Lt = '<'
+  struct Plus = '+'
+  struct Quote = '\''
+}
+
+// ╦ ╦┌─┐┬  ┌─┐┌─┐┬─┐
+// ╠═╣├┤ │  ├─┘├┤ ├┬┘
+// ╩ ╩└─┘┴─┘┴  └─┘┴└─
 
 // Highly inspired by `syn`, clever ideas.
-macro_rules! Token {
-  [crate] => { $crate::token::Crate };
-  [enum] => { $crate::token::Enum };
-  [pub] => { $crate::token::Pub };
-  [Self] => { $crate::token::SelfType };
-  [self] => { $crate::token::SelfValue };
-  [struct] => { $crate::token::Struct };
-  [super] => { $crate::token::Super };
+macro_rules! token_helper {
+  [#] => { crate::token::Hash };
+  [+] => { crate::token::Plus };
+  [,] => { crate::token::Comma };
+  [:] => { crate::token::Colon };
+  [<] => { crate::token::Lt };
+  [>] => { crate::token::Gt };
+  [const] => { crate::token::Const };
+  [pub] => { crate::token::Pub };
+  [simple_quote] => { crate::token::Quote }; // '
+  [struct] => { crate::token::Struct };
+  [where] => { crate::token::Where };
 }
 
-pub(crate) use Token;
+macro_rules! group_helper {
+  [()] => { crate::token::Parenthesis };
+  [[]] => { crate::token::Bracket };
+  [{}] => { crate::token::Brace };
+}
+
+pub(crate) use group_helper as Group;
+pub(crate) use token_helper as Token;

@@ -1,10 +1,16 @@
 use proc_macro::Ident;
 use proc_macro::Punct;
+use proc_macro::TokenTree;
 
 // proc_macro::bridge:
 // Internal interface for communicating between a proc_macro client (a proc
 // macro crate) and a proc_macro server (a compiler front-end).
 
+use crate::parser::Parse;
+use crate::parser::Peek;
+use crate::parser::Stream;
+
+pub(crate) use proc_macro::Delimiter;
 pub(crate) use proc_macro::Group;
 pub(crate) use proc_macro::Literal;
 
@@ -16,6 +22,39 @@ pub(crate) enum Entry {
   Literal(Literal),
   Identifier(Identifier),
   Punctuation(Punctuation),
-  Group(Group, isize),
+  Group(Group),
   End(),
 }
+
+impl From<TokenTree> for Entry {
+  fn from(token: TokenTree) -> Self {
+    match token {
+      TokenTree::Group(group) => Entry::Group(group),
+      TokenTree::Literal(literal) => Entry::Literal(literal),
+      TokenTree::Ident(identifier) => Entry::Identifier(identifier),
+      TokenTree::Punct(punctuation) => Entry::Punctuation(punctuation),
+    }
+  }
+}
+
+macro_rules! implement_parser {
+  ($($token: ident),*) => {
+    $(
+      impl Peek for $token {
+        fn peek(input: Stream) -> bool {
+          input.take::<$token>().is_some()
+        }
+      }
+
+      impl Parse for $token {
+        fn parse(input: Stream) -> Option<Self> {
+          let (token, next) = input.take::<$token>()?;
+          input.merge(next); // Move the cursor.
+          Some(token.clone())
+        }
+      }
+    )*
+  };
+}
+
+implement_parser!(Identifier, Group, Literal, Punctuation);

@@ -115,53 +115,13 @@ impl<'buffer> Cursor<'buffer> {
   }
 
   #[inline(always)]
-  pub(self) fn entry(&self) -> &'buffer Entry {
+  pub(crate) fn entry(&self) -> &'buffer Entry {
     unsafe { &*self.head.get().current }
   }
 
   #[inline(always)]
   pub(self) fn step(&self) -> Cursor<'buffer> {
     Cursor::from_head(unsafe { self.head.get().step() })
-  }
-}
-
-// ╔═╗┌┐┌┌┬┐┬─┐┬ ┬
-// ║╣ │││ │ ├┬┘└┬┘
-// ╚═╝┘└┘ ┴ ┴└─ ┴
-
-pub(crate) type Take<'buffer, Type> = Option<(&'buffer Type, Cursor<'buffer>)>;
-
-impl<'buffer> Cursor<'buffer> {
-  // Returns an identifier, does not move the cursor.
-  pub(crate) fn identifier(&self) -> Take<Identifier> {
-    match self.entry() {
-      Entry::Identifier(token) => Some((token, self.step())),
-      _ => None,
-    }
-  }
-
-  // Returns a literal, does not move the cursor.
-  pub(crate) fn literal(&self) -> Take<Literal> {
-    match self.entry() {
-      Entry::Literal(token) => Some((token, self.step())),
-      _ => None,
-    }
-  }
-
-  // Returns a punctuation, does not move the cursor.
-  pub(crate) fn punctuation(&self) -> Take<Punctuation> {
-    match self.entry() {
-      Entry::Punctuation(token) => Some((token, self.step())),
-      _ => None,
-    }
-  }
-
-  // Returns a group, does not move the cursor.
-  pub(crate) fn group(&self) -> Take<Group> {
-    match self.entry() {
-      Entry::Group(token, _offset) => Some((token, self.step())),
-      _ => None,
-    }
   }
 }
 
@@ -181,5 +141,42 @@ impl<'buffer> Cursor<'buffer> {
   // Peek and does not move the cursor.
   pub(crate) fn peek<Type: Peek>(&'buffer self) -> bool {
     Type::peek(self)
+  }
+}
+
+// ╔╦╗┌─┐┬┌─┌─┐
+//  ║ ├─┤├┴┐├┤
+//  ╩ ┴ ┴┴ ┴└─┘
+
+pub(crate) type TakeResult<'buffer, Type> = (&'buffer Type, Cursor<'buffer>);
+
+pub(crate) trait Take<'buffer, Type> {
+  fn take(&self) -> Option<TakeResult<'buffer, Type>>;
+}
+
+macro_rules! implement_take {
+  ($($token: ident),*) => {
+    $(
+      impl<'buffer> Take<'buffer, $token> for Cursor<'buffer> {
+        fn take(&self) -> Option<TakeResult<'buffer, $token>> {
+          match self.entry() {
+            Entry::$token(token) => Some((token, self.step())),
+            _ => None,
+          }
+        }
+      }
+    )*
+  };
+}
+
+implement_take!(Identifier, Group, Literal, Punctuation);
+
+// For ease of use.
+impl<'buffer> Cursor<'buffer> {
+  pub(crate) fn take<Type>(&self) -> Option<TakeResult<'buffer, Type>>
+  where
+    Self: Take<'buffer, Type>,
+  {
+    Take::take(self)
   }
 }
