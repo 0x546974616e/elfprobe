@@ -13,6 +13,8 @@ Here two solutions to implement the `Pod` derive macro.
 
 See [`sources/`](./sources/) (still WIP).
 
+So far, only a subset of Rust language is supported.
+
 ### Solution 2: Use `syn` and `quote` crates
 
 > "Oh it's by dtolnay, I feel much better." (Twitter)

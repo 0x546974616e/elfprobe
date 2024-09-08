@@ -108,8 +108,8 @@ pub struct ElfIdentification<ElfType: self::ElfType> {
   pub ei_class: ElfType::Uchar,
   pub ei_data: ElfType::Uchar,
   pub ei_version: ElfType::Uchar,
-  pub ei_osabi: ElfType::Uchar,      // No specified in elf32 but ok.
-  pub ei_abiversion: ElfType::Uchar, // No specified in elf32 but ok.
+  pub ei_osabi: ElfType::Uchar,      // Not specified in elf32 but ok.
+  pub ei_abiversion: ElfType::Uchar, // Not specified in elf32 but ok.
   pub ei_pad: [ElfType::Uchar; 7],
 }
 

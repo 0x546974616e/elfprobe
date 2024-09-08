@@ -173,6 +173,13 @@ implement_take!(Identifier, Group, Literal, Punctuation);
 
 // For ease of use.
 impl<'buffer> Cursor<'buffer> {
+  pub(crate) fn is_end(&self) -> bool {
+    match self.entry() {
+      Entry::End() => true,
+      _ => false,
+    }
+  }
+
   pub(crate) fn take<Type>(&self) -> Option<TakeResult<'buffer, Type>>
   where
     Self: Take<'buffer, Type>,

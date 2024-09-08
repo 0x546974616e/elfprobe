@@ -82,6 +82,8 @@ macro_rules! define_keywords {
 
 define_keywords! {
   struct Const = "const"
+  struct Crate = "crate"
+  struct For = "for"
   struct Pub = "pub"
   struct Struct = "struct"
   struct Where = "where"
@@ -124,11 +126,16 @@ macro_rules! define_punctuation {
 define_punctuation! {
   struct Colon = ':'
   struct Comma = ','
+  struct Dollar = '$'
+  struct Equals = '='
   struct Gt = '>'
   struct Hash = '#'
   struct Lt = '<'
   struct Plus = '+'
+  struct Question = '?'
   struct Quote = '\''
+  struct SemiColon = ';'
+  struct Underscore = '_'
 }
 
 // ╦ ╦┌─┐┬  ┌─┐┌─┐┬─┐
@@ -138,14 +145,22 @@ define_punctuation! {
 // Highly inspired by `syn`, clever ideas.
 macro_rules! token_helper {
   [#] => { crate::token::Hash };
+  [$] => { crate::token::Dollar };
   [+] => { crate::token::Plus };
   [,] => { crate::token::Comma };
   [:] => { crate::token::Colon };
+  [;] => { crate::token::SemiColon };
   [<] => { crate::token::Lt };
+  [=] => { crate::token::Equals };
   [>] => { crate::token::Gt };
+  [?] => { crate::token::Question };
+  [_] => { crate::token::Underscore };
   [const] => { crate::token::Const };
+  [crate] => { crate::token::Crate };
+  [for] => { crate::token::For };
   [pub] => { crate::token::Pub };
-  [simple_quote] => { crate::token::Quote }; // '
+  [q] => { crate::token::Quote }; // alias simple_quote
+  [simple_quote] => { crate::token::Quote }; // alias '
   [struct] => { crate::token::Struct };
   [where] => { crate::token::Where };
 }
