@@ -14,5 +14,6 @@
 ## elfprobe-macro
 
 - [ ] Make a wrapper of `Entry`/`TokenTree` that stores to_string() returned value? (useless for far)
+- [ ] <https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html> (when stable)
 - [ ] Parse `where` clause and `Type`.
 - [ ] Parse must return an error.

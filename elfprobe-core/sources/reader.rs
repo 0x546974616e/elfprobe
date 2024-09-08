@@ -97,6 +97,7 @@ impl<'data> Reader<'data> for &'data [u8] {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use elfprobe_macro::Pod;
   use std::mem::{align_of, offset_of};
 
   #[test]
@@ -109,13 +110,11 @@ mod tests {
   #[test]
   fn read_pod() {
     #[repr(C)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Pod)]
     struct Dada {
       a: u8,
       b: u64,
     }
-
-    impl Pod for Dada {}
 
     impl Default for Dada {
       fn default() -> Self {

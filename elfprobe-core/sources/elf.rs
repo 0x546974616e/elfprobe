@@ -13,6 +13,7 @@ use crate::endian::{BigEndian, Endianness, LittleEndian};
 use crate::error::BytesError;
 use crate::pod::Pod;
 use crate::primitive::{I16, I32, I64, U16, U32, U64};
+use elfprobe_macro::Pod;
 
 // ╔═╗┬  ┬┌─┐┌─┐┌─┐┌─┐
 // ╠═╣│  │├─┤└─┐├┤ └─┐
@@ -45,7 +46,6 @@ pub type Elf64_Sxword<E> = I64<E>;
 pub trait Type: Pod + Debug + Default {}
 impl<T> Type for T where T: Pod + Debug + Default {}
 
-// pub trait ElfType<Endianness: self::Endianness>: Pod + Default {
 pub trait ElfType: Type {
   type Endian: self::Endianness;
 
@@ -68,9 +68,8 @@ pub trait ElfType: Type {
   type Word: Type;
 }
 
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone, Pod)]
 pub struct ElfType32<E: self::Endianness>(PhantomData<E>);
-impl<E: self::Endianness> Pod for ElfType32<E> {}
 impl<E: self::Endianness> ElfType for ElfType32<E> {
   type Endian = E;
   type Addr = Elf32_Addr<E>;
@@ -81,9 +80,8 @@ impl<E: self::Endianness> ElfType for ElfType32<E> {
   type Word = Elf32_Word<E>;
 }
 
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone, Pod)]
 pub struct ElfType64<E: self::Endianness>(PhantomData<E>);
-impl<E: self::Endianness> Pod for ElfType64<E> {}
 impl<E: self::Endianness> ElfType for ElfType64<E> {
   type Endian = E;
   type Addr = Elf64_Addr<E>;
@@ -99,7 +97,7 @@ impl<E: self::Endianness> ElfType for ElfType64<E> {
 // ╚═╝ ┴ ┴└─└─┘└─┘ ┴
 
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone, Pod)]
 pub struct ElfIdentification<ElfType: self::ElfType> {
   pub ei_mag0: ElfType::Uchar,
   pub ei_mag1: ElfType::Uchar,
@@ -112,9 +110,6 @@ pub struct ElfIdentification<ElfType: self::ElfType> {
   pub ei_abiversion: ElfType::Uchar, // Not specified in elf32 but ok.
   pub ei_pad: [ElfType::Uchar; 7],
 }
-
-// Ensure that type is POD.
-impl<ElfType: self::ElfType> Pod for ElfIdentification<ElfType> {}
 
 #[test]
 fn test_elf_identification_memory_size() {
@@ -131,7 +126,7 @@ fn test_elf_identification_memory_size() {
 }
 
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone, Pod)]
 pub struct ElfHeader<ElfType: self::ElfType> {
   pub e_ident: ElfIdentification<ElfType>,
   pub e_type: ElfType::Half,
@@ -148,9 +143,6 @@ pub struct ElfHeader<ElfType: self::ElfType> {
   pub e_shnum: ElfType::Half,
   pub e_shstrndx: ElfType::Half,
 }
-
-// Ensure that type is POD.
-impl<ElfType: self::ElfType> Pod for ElfHeader<ElfType> {}
 
 // ╔═╗┬┬  ┌─┐
 // ╠╣ ││  ├┤

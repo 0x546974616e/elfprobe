@@ -1,4 +1,9 @@
+use std::str::FromStr;
+
+use proc_macro::Delimiter;
+use proc_macro::Span;
 use proc_macro::TokenStream;
+use proc_macro::TokenTree;
 
 use crate::buffer::Buffer;
 use crate::entry::Group;
@@ -7,14 +12,6 @@ use crate::parser::GenericParams;
 use crate::parser::OuterAttribute;
 use crate::parser::Visibility;
 use crate::token::Token;
-
-// TODO: https://doc.rust-lang.org/proc_macro/struct.Diagnostic.html (when stable)
-
-// pub struct #GENERICS Dada() where #WHERE;
-// impl #GENERICS Pod for Dada #TYPES where #WHERE {}
-
-// (impl_generics, type_generics, where_clause)
-// impl #impl_generics crate::pod::Pod for #name #type_generics #where_clause {}
 
 ///
 /// - [Struct] :
@@ -33,7 +30,7 @@ use crate::token::Token;
 /// [TupleFields]: https://doc.rust-lang.org/reference/items/structs.html#structs
 /// [WhereClause]: https://doc.rust-lang.org/reference/items/generics.html#where-clauses
 ///
-pub(crate) fn derive(stream: TokenStream) {
+pub(crate) fn derive(stream: TokenStream, traitt: &str) -> TokenStream {
   let buffer = Buffer::from(stream);
   let cursor = buffer.cursor();
   // eprintln!("{:#?}", buffer);
@@ -56,7 +53,7 @@ pub(crate) fn derive(stream: TokenStream) {
 
   // 5. Generic parameters (optional)
   let generics = cursor.parse::<GenericParams>();
-  eprintln!("{:#?}", generics);
+  // eprintln!("{:#?}", generics);
 
   // 6. Where clause (structure) (optional)
   if cursor.parse::<Token![where]>().is_some() {
@@ -71,14 +68,42 @@ pub(crate) fn derive(stream: TokenStream) {
     panic!("Where clause are not supported yet.")
   }
 
-  // 9. Semicolon (mandatory)
-  cursor
-    .parse::<Token![;]>()
-    .expect("Expected a semicolon (`;`) after `struct` declaration.");
+  // 9. Semicolon (optional)
+  cursor.parse::<Token![;]>();
 
   if !cursor.is_end() {
     panic!("Expected the end of the token stream.")
   }
 
-  eprintln!("{:?}", cursor.entry());
+  // 10. Build the TokenStream.
+  /// pub struct #GENERICS Dada() where #WHERE;
+  /// impl #IMPL_GENERICS Pod for Dada #TYPE_GENERICS where #WHERE {}
+  let mut derive = TokenStream::new();
+
+  // 11. "impl" keyworkd
+  derive.extend([TokenTree::from(Identifier::new("impl", Span::call_site()))]);
+
+  // 12. Structure generics
+  if let Some(generics) = &generics {
+    derive.extend(generics.collect_impl());
+  }
+
+  // 13. Trait to derive
+  derive.extend(TokenStream::from_str(traitt));
+
+  // 14. "for" keyword
+  derive.extend([TokenTree::from(Identifier::new("for", Span::call_site()))]);
+
+  // 15. Structure name.
+  derive.extend([TokenTree::from(name)]);
+
+  // 15. Generic types.
+  if let Some(generics) = &generics {
+    derive.extend(generics.collect_types());
+  }
+
+  // 16. Brace group
+  derive.extend([TokenTree::from(Group::new(Delimiter::Brace, TokenStream::new()))]);
+
+  derive
 }

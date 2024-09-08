@@ -2,7 +2,7 @@ use std::fmt;
 use std::marker::PhantomData;
 
 use crate::endian::Endianness;
-use crate::pod::Pod;
+use elfprobe_macro::Pod;
 
 // https://rust-exercises.com/100-exercises/04_traits/02_orphan_rule
 // https://stackoverflow.com/questions/25413201/how-do-i-implement-a-trait-i-dont-own-for-a-type-i-dont-own
@@ -42,11 +42,8 @@ macro_rules! create_primitive {
     //
     #[allow(unused)]
     #[repr(transparent)]
-    #[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Pod)]
     pub struct $struct<Endianness: self::Endianness>($inner, PhantomData<Endianness>);
-
-    // Ensure that the type is POD.
-    impl<Endianness: self::Endianness> Pod for $struct<Endianness> {}
 
     #[allow(unused)]
     pub type $alias<Endianness> = $struct<Endianness>;

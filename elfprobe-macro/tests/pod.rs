@@ -1,5 +1,8 @@
 trait La {}
 trait Do {}
+ mod pod {
+    pub trait Pod {}
+  }
 
 #[test]
 fn pod_derive() {
@@ -17,6 +20,9 @@ fn pod_derive() {
     }
   }
 
+  trait Pod {}
+
+
   #[derive(Pod)]
   #[allow(unused)]
   #[repr(packed)]
@@ -25,8 +31,8 @@ fn pod_derive() {
     'a: 'static + 'dada + 'static,
     T: 'static + self::La + 'dada + 'a + Fafa + a::b::c::d::Gaga + crate::Do,
     B: self::Do,
-    E:,
-    F: a::Ici +,
+    E,
+    F: a::Ici,
   >(&'dada B, &'a T, E, F);
   // let _ = Dada;
 }

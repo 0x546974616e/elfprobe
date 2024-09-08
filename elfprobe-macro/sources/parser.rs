@@ -1,3 +1,5 @@
+use proc_macro::TokenTree;
+
 use crate::cursor::Cursor;
 use crate::entry::Identifier;
 use crate::entry::Literal;
@@ -14,6 +16,33 @@ pub(crate) trait Parse: Sized {
 pub(crate) trait Peek {
   // Checks required match, does not move the cursor.
   fn peek(stream: Stream) -> bool;
+}
+
+pub(crate) trait Collect {
+  fn collect(&self, tree: &mut Vec<TokenTree>);
+}
+
+impl<Type: Collect> Collect for Option<Type> {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    if let Some(value) = self {
+      value.collect(tree);
+    }
+  }
+}
+
+impl<Type1: Collect, Type2: Collect> Collect for (Type1, Type2) {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    self.0.collect(tree);
+    self.1.collect(tree);
+  }
+}
+
+impl<Type: Collect> Collect for Vec<Type> {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    for value in self.iter() {
+      value.collect(tree);
+    }
+  }
 }
 
 ///
@@ -105,6 +134,35 @@ impl Parse for GenericParams {
   }
 }
 
+impl GenericParams {
+  pub(crate) fn collect_impl(&self) -> Vec<TokenTree> {
+    let mut tree = Vec::<TokenTree>::new();
+    self.opening_angle_bracket.collect(&mut tree);
+    self.parameters.collect(&mut tree);
+    self.closing_angle_bracket.collect(&mut tree);
+    tree
+  }
+
+  pub(crate) fn collect_types(&self) -> Vec<TokenTree> {
+    let mut tree = Vec::<TokenTree>::new();
+    self.opening_angle_bracket.collect(&mut tree);
+    for (parameter, comma) in self.parameters.iter() {
+      match &parameter {
+        GenericParam::Const(_const) => todo!(),
+        GenericParam::Lifetime(LifetimeParam { lifetime, ..}) => {
+          lifetime.collect(&mut tree);
+        }
+        GenericParam::Type(TypeParam { identifier, .. }) => {
+          identifier.collect(&mut tree);
+        }
+      }
+      comma.collect(&mut tree);
+    }
+    self.closing_angle_bracket.collect(&mut tree);
+    tree
+  }
+}
+
 ///
 /// - [GenericParam] :
 ///   [OuterAttribute]* ( [LifetimeParam] | [TypeParam] | [ConstParam] )
@@ -146,6 +204,16 @@ impl Parse for GenericParam {
   }
 }
 
+impl Collect for GenericParam {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    match self {
+      Self::Const(parameter) => parameter.collect(tree),
+      Self::Lifetime(parameter) => parameter.collect(tree),
+      Self::Type(parameter) => parameter.collect(tree),
+    }
+  }
+}
+
 ///
 /// - [ConstParam] :
 ///   `const` [Identifier] `:` [Type] ( `=` [Block] | [Identifier] | -? [Literal] )?
@@ -166,6 +234,12 @@ impl Parse for ConstParam {
     }
 
     None
+  }
+}
+
+impl Collect for ConstParam {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    todo!()
   }
 }
 
@@ -205,6 +279,13 @@ impl Parse for LifetimeParam {
   }
 }
 
+impl Collect for LifetimeParam {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    self.lifetime.collect(tree);
+    self.bounds.collect(tree);
+  }
+}
+
 ///
 /// - [LifetimeOrLabel] :
 ///    `'` [NonKeywordIdentifier]
@@ -228,6 +309,13 @@ impl Parse for LifetimeOrLabel {
       }
       _ => None,
     }
+  }
+}
+
+impl Collect for LifetimeOrLabel {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    self.quote.collect(tree);
+    self.lifetime.collect(tree);
   }
 }
 
@@ -262,6 +350,12 @@ impl Parse for LifetimeBounds {
   }
 }
 
+impl Collect for LifetimeBounds {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    self.lifetimes.collect(tree);
+  }
+}
+
 ///
 /// - [Lifetime] :
 ///   [LifetimeOrLabel] | `'static` | `'_`
@@ -291,6 +385,18 @@ impl Parse for Lifetime {
   }
 }
 
+impl Collect for Lifetime {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    match self {
+      Self::Lifetime(lifetime) => lifetime.collect(tree),
+      Self::Inferred((quote, underscore)) => {
+        quote.collect(tree);
+        underscore.collect(tree);
+      }
+    }
+  }
+}
+
 ///
 /// - [TypeParam] :
 ///   [Identifier] ( `:` [TypeParamBounds]? )? ( `=` [Type] )?
@@ -309,12 +415,7 @@ impl Parse for TypeParam {
     let ahead = input.fork(); // All or nothing.
     let identifier = ahead.parse::<Identifier>()?;
 
-    let bounds = {
-      match ahead.parse() {
-        None => None,
-        Some(colon) => Some((colon, ahead.parse())),
-      }
-    };
+    let bounds = ahead.parse().map(|colon| (colon, ahead.parse()));
 
     if ahead.parse::<Token![=]>().is_some() {
       panic!("Default generic values are not supported yet.");
@@ -322,6 +423,13 @@ impl Parse for TypeParam {
 
     input.merge(ahead); // Move cursor.
     Some(TypeParam { identifier, bounds })
+  }
+}
+
+impl Collect for TypeParam {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    self.identifier.collect(tree);
+    self.bounds.collect(tree);
   }
 }
 
@@ -352,6 +460,12 @@ impl Parse for TypeParamBounds {
   }
 }
 
+impl Collect for TypeParamBounds {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    self.bounds.collect(tree);
+  }
+}
+
 ///
 /// - [TypeParamBound] :
 ///   [Lifetime] | [TraitBound]
@@ -371,6 +485,15 @@ impl Parse for TypeParamBound {
     }
 
     Some(TypeParamBound::Lifetime(input.parse()?))
+  }
+}
+
+impl Collect for TypeParamBound {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    match self {
+      Self::TraitBound(bound) => bound.collect(tree),
+      Self::Lifetime(lifetime) => lifetime.collect(tree),
+    }
   }
 }
 
@@ -402,6 +525,15 @@ impl Parse for TraitBound {
   }
 }
 
+impl Collect for TraitBound {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    match self {
+      Self::Path(path) => path.collect(tree),
+      Self::Group(group) => group.collect(tree),
+    }
+  }
+}
+
 ///
 /// - [ForLifetimes] :
 ///   `for` [GenericParams]
@@ -420,6 +552,12 @@ impl Parse for ForLifetimes {
     }
 
     None
+  }
+}
+
+impl Collect for ForLifetimes {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    todo!()
   }
 }
 
@@ -468,6 +606,12 @@ impl Parse for TypePath {
   }
 }
 
+impl Collect for TypePath {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    self.segments.collect(tree);
+  }
+}
+
 ///
 /// - [TypePathSegment] :
 ///    [PathIdentSegment] (`::`? ([GenericArgs] | [TypePathFn]))?
@@ -492,6 +636,12 @@ pub(crate) struct TypePathSegment {
 
 impl Parse for TypePathSegment {
   fn parse(input: Stream) -> Option<Self> {
+    todo!()
+  }
+}
+
+impl Collect for TypePathSegment {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
     todo!()
   }
 }
@@ -521,6 +671,15 @@ impl Parse for PathIdentSegment {
         Some(PathIdentSegment::Crate((dollar, keyword)))
       }
       _ => None,
+    }
+  }
+}
+
+impl Collect for PathIdentSegment {
+  fn collect(&self, tree: &mut Vec<TokenTree>) {
+    match self {
+      Self::Identifier(identifier) => identifier.collect(tree),
+      Self::Crate(segment) => segment.collect(tree),
     }
   }
 }

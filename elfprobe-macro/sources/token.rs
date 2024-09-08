@@ -1,3 +1,4 @@
+use proc_macro::TokenTree;
 use std::fmt;
 
 use crate::cursor::Cursor;
@@ -7,6 +8,7 @@ use crate::entry::Group;
 use crate::entry::Identifier;
 use crate::entry::Punctuation;
 
+use crate::parser::Collect;
 use crate::parser::Parse;
 use crate::parser::Peek;
 use crate::parser::Stream;
@@ -34,6 +36,12 @@ macro_rules! create_token {
       fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.token.to_string().fmt(formatter)
         // self.token.fmt(formatter)
+      }
+    }
+
+    impl Collect for $name {
+      fn collect(&self, tree: &mut Vec<TokenTree>) {
+        tree.push(TokenTree::from(self.token.clone()));
       }
     }
 

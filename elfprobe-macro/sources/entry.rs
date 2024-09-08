@@ -6,6 +6,7 @@ use proc_macro::TokenTree;
 // Internal interface for communicating between a proc_macro client (a proc
 // macro crate) and a proc_macro server (a compiler front-end).
 
+use crate::parser::Collect;
 use crate::parser::Parse;
 use crate::parser::Peek;
 use crate::parser::Stream;
@@ -40,6 +41,12 @@ impl From<TokenTree> for Entry {
 macro_rules! implement_parser {
   ($($token: ident),*) => {
     $(
+      impl Collect for $token {
+        fn collect(&self, tree: &mut Vec<TokenTree>) {
+          tree.push(TokenTree::from(self.clone()));
+        }
+      }
+
       impl Peek for $token {
         fn peek(input: Stream) -> bool {
           input.take::<$token>().is_some()
