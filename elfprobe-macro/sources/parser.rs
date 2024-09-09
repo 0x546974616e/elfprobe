@@ -1,13 +1,6 @@
 use crate::cursor::Cursor;
 use proc_macro::TokenTree;
 
-pub mod attributes;
-pub mod constants;
-pub mod generics;
-pub mod lifetimes;
-pub mod types;
-pub mod visibilities;
-
 pub(crate) type Stream<'buffer> = &'buffer Cursor<'buffer>;
 
 pub(crate) trait Parse: Sized {
@@ -21,32 +14,42 @@ pub(crate) trait Peek {
 }
 
 pub(crate) trait Collect {
-  fn collect(&self, tree: &mut Vec<TokenTree>);
+  fn collect_into(&self, tree: &mut Vec<TokenTree>);
 }
 
 impl<Type: Collect> Collect for Option<Type> {
-  fn collect(&self, tree: &mut Vec<TokenTree>) {
+  fn collect_into(&self, tree: &mut Vec<TokenTree>) {
     if let Some(value) = self {
-      value.collect(tree);
+      value.collect_into(tree);
     }
   }
 }
 
 impl<Type: Collect> Collect for Vec<Type> {
-  fn collect(&self, tree: &mut Vec<TokenTree>) {
+  fn collect_into(&self, tree: &mut Vec<TokenTree>) {
     for value in self.iter() {
-      value.collect(tree);
+      value.collect_into(tree);
     }
   }
 }
 
-// Just to mess up and try things out.
-// Completely unreadable and unnecessary.
+// ╦ ╦┌┐┌┬┌─┐┌┐┌
+// ║ ║│││││ ││││
+// ╚═╝┘└┘┴└─┘┘└┘
+
+///
+/// To increase the limit on sequences (`(A B C)`) and alternatives (`(A | B | C`),
+/// modify the first macro rule below (with no parameters) and add as many
+/// [`parser!(%parse(...))`][parser!()] rules as necessary.
+///
 #[rustfmt::skip]
 macro_rules! define {
+  // Just to mess up and try things out.
+  // Completely unreadable and unnecessary (kind of).
 
   () => {
     // Union and Sequence are limited to 5 elements.
+    // (Keep the same pattern, `A..E` and `4..0`, mandatory to work)
     define!(A.4, B.3, C.2, D.1, E.0);
   };
 
@@ -66,13 +69,13 @@ macro_rules! define {
 
   (@collect) => {
     impl Collect for () {
-      fn collect(&self, _tree: &mut Vec<TokenTree>) {}
+      fn collect_into(&self, _tree: &mut Vec<TokenTree>) {}
     }
   };
 
   (@collect/ $($l:tt.$d:tt)+) => {
     impl<$($l: Collect),+> Collect for ($($l,)+) {
-      fn collect(&self, tree: &mut Vec<TokenTree>) {
+      fn collect_into(&self, tree: &mut Vec<TokenTree>) {
         define!(#self tree [$($d)+] - []);
       }
     }
@@ -83,7 +86,7 @@ macro_rules! define {
   };
 
   (#$self:tt $tree:tt [] - [$($d:tt)+]) => {
-    $($self.$d.collect($tree);)*
+    $($self.$d.collect_into($tree);)*
   };
 
   // ╦ ╦┌┐┌┬┌─┐┌┐┌
@@ -98,9 +101,9 @@ macro_rules! define {
     }
 
     impl<$($l: Collect),+> Collect for Union<$($l),+> {
-      fn collect(&self, tree: &mut Vec<TokenTree>) {
+      fn collect_into(&self, tree: &mut Vec<TokenTree>) {
         match self {
-          $(Self::$l(value) => value.collect(tree)),+
+          $(Self::$l(value) => value.collect_into(tree)),+
         }
       }
     }
@@ -117,11 +120,29 @@ define!();
 // https://doc.rust-lang.org/stable/unstable-book/language-features/try-blocks.html
 
 ///
-/// Generate a tokens paser according to the given rule.
+/// Generate a tokens parser according to the given rules.
 ///
 /// - **Syntax**:
 ///
-/// TODO: limit 5
+///   - Repetitions:
+///     - One or zero: `[A?]`
+///     - One or more: `[A*]`
+///     - Zero or more: `[A+]`
+///   - Sequences: `(A B)`, `(A B C)`...
+///   - Alternatives: `(A | B)`, `(A | B | C)`...
+///   - Terminal: [identifier], [literal], [punctuation], [group]
+///
+/// [identifier]: proc_macro::Ident
+/// [literal]: proc_macro::Literal
+/// [punctuation]: proc_macro::Punct
+/// [group]: proc_macro::Group
+///
+/// - **Notes**:
+///
+///   - Sequences and alternatives are currently limited to 5 elements
+///     (easy to change, see [`define!()`][define!()] macro for details).
+///   - Repetitions must have parenthesis when including a non-terminal
+///     (e.g. `[(A B)?]`).
 ///
 /// - **Example**:
 ///
@@ -149,6 +170,8 @@ define!();
 /// }
 /// ```
 ///
+/// - **See** [`rules.rs`][crate::rules] for more examples.
+///
 #[rustfmt::skip]
 macro_rules! parser {
 
@@ -171,8 +194,8 @@ macro_rules! parser {
     }
 
     impl $crate::parser::Collect for $rule {
-      fn collect(&self, tree: &mut Vec<proc_macro::TokenTree>) {
-        self.tree.collect(tree);
+      fn collect_into(&self, tree: &mut Vec<proc_macro::TokenTree>) {
+        self.tree.collect_into(tree);
       }
     }
 
@@ -202,6 +225,12 @@ macro_rules! parser {
   // Zero or one of TT.
   (@type( [$tt:tt?] )) => {
     Option<parser!(@type( $tt ))>
+  };
+
+  // Prevents unions of one element.
+  // NOTE: "Sequence" cannot be before "Alternatives" because `tt` will eat all the pipes.
+  (@type( ($tt:tt) )) => {
+    parser!(@type( $tt ))
   };
 
   // Alternatives TT.
@@ -252,6 +281,11 @@ macro_rules! parser {
     {
       Some({ parser!(@parse( $input, $tt )) })
     }
+  };
+
+  // Prevents unions of one element.
+  (@parse( $input:ident, ($tt:tt) )) => {
+    parser!(@parse( $input, $tt ))
   };
 
   // Alternatives TT.

@@ -39,7 +39,7 @@ macro_rules! create_token {
     }
 
     impl Collect for $name {
-      fn collect(&self, tree: &mut Vec<TokenTree>) {
+      fn collect_into(&self, tree: &mut Vec<TokenTree>) {
         tree.push(TokenTree::from(self.token.clone()));
       }
     }
@@ -149,6 +149,7 @@ define_punctuation! {
 // ╠═╣├┤ │  ├─┘├┤ ├┬┘
 // ╩ ╩└─┘┴─┘┴  └─┘┴└─
 
+#[allow(unused)]
 // Highly inspired by `syn`, clever ideas.
 macro_rules! token_helper {
   [#] => { crate::token::Hash };
@@ -166,17 +167,20 @@ macro_rules! token_helper {
   [crate] => { crate::token::Crate };
   [for] => { crate::token::For };
   [pub] => { crate::token::Pub };
-  [q] => { crate::token::Quote }; // alias simple_quote
-  [simple_quote] => { crate::token::Quote }; // alias '
+  [q] => { crate::token::Quote }; // alias of '
   [struct] => { crate::token::Struct };
   [where] => { crate::token::Where };
 }
 
+#[allow(unused)]
 macro_rules! group_helper {
   [()] => { crate::token::Parenthesis };
   [[]] => { crate::token::Bracket };
   [{}] => { crate::token::Brace };
 }
 
+#[allow(unused)]
 pub(crate) use group_helper as Group;
+
+#[allow(unused)]
 pub(crate) use token_helper as Token;

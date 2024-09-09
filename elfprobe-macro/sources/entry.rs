@@ -42,7 +42,7 @@ macro_rules! implement_parser {
   ($($token: ident),*) => {
     $(
       impl Collect for $token {
-        fn collect(&self, tree: &mut Vec<TokenTree>) {
+        fn collect_into(&self, tree: &mut Vec<TokenTree>) {
           tree.push(TokenTree::from(self.clone()));
         }
       }

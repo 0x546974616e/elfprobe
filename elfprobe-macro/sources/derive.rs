@@ -8,102 +8,69 @@ use proc_macro::TokenTree;
 use crate::buffer::Buffer;
 use crate::entry::Group;
 use crate::entry::Identifier;
-use crate::parser::attributes::OuterAttribute;
-use crate::parser::generics::GenericParams;
-use crate::parser::visibilities::Visibility;
-use crate::token::Token;
+use crate::parser::Parse;
+use crate::rules::StructType;
 
 ///
-/// - [Struct] :
-///   [OuterAttribute]* [Visibility]? ( [StructStruct] | [TupleStruct] )
+/// ```txt
+/// pub struct #GENERICS Dada {...} where #WHERE;
+/// impl #IMPL_GENERICS #TRAIT for Dada #TYPE_GENERICS where #WHERE {}
+/// ```
 ///
-/// - [StructStruct] :
-///   `struct` [Identifier] [GenericParams]? [WhereClause]? ( `{` [StructFields]? `}` | `;` )
-///
-/// - [TupleStruct] :
-///   `struct` [Identifier] [GenericParams]? `(` [TupleFields]? `)` [WhereClause]? `;`
-///
-/// [Struct]: https://doc.rust-lang.org/reference/items/structs.html#structs
-/// [StructStruct]: https://doc.rust-lang.org/reference/items/structs.html#structs
-/// [TupleStruct]: https://doc.rust-lang.org/reference/items/structs.html#structs
-/// [StructFields]: https://doc.rust-lang.org/reference/items/structs.html#structs
-/// [TupleFields]: https://doc.rust-lang.org/reference/items/structs.html#structs
-/// [WhereClause]: https://doc.rust-lang.org/reference/items/generics.html#where-clauses
-///
-pub(crate) fn derive(stream: TokenStream, traitt: &str) -> TokenStream {
+pub(crate) fn derive(stream: TokenStream, r#trait: &str) -> TokenStream {
   let buffer = Buffer::from(stream);
   let cursor = buffer.cursor();
   // eprintln!("{:#?}", buffer);
 
-  // 1. Outer attributes (optional)
-  while cursor.parse::<OuterAttribute>().is_some() {}
+  // ╔═╗┌─┐┬─┐┌─┐┌─┐
+  // ╠═╝├─┤├┬┘└─┐├┤
+  // ╩  ┴ ┴┴└─└─┘└─┘
 
-  // 2. Visibility (optional)
-  cursor.parse::<Visibility>();
+  // 1. Parse the given structure.
+  let r#struct = StructType::parse(&cursor);
 
-  // 3. "struct" keywork (required)
-  cursor
-    .parse::<Token![struct]>()
-    .expect("Expected `struct` keyword (enumerations are not supported yet).");
-
-  // 4. Structure identifier (required)
-  let Some(name) = cursor.parse::<Identifier>() else {
-    panic!("Expected structure identifier.")
-  };
-
-  // 5. Generic parameters (optional)
-  let generics = cursor.parse::<GenericParams>();
-  // eprintln!("{:#?}", generics);
-
-  // 6. Where clause (structure) (optional)
-  if cursor.parse::<Token![where]>().is_some() {
-    panic!("Where clause are not supported yet.")
+  // 2. A structure should have been found.
+  if r#struct.is_none() {
+    panic!("Could not parse the given structure (enumerations are not supported yet).");
   }
 
-  // 7. Structure or tuple fiels (optional)
-  cursor.parse::<Group>();
-
-  // 8. Where clause (tuple) (optional)
-  if cursor.parse::<Token![where]>().is_some() {
-    panic!("Where clause are not supported yet.")
-  }
-
-  // 9. Semicolon (optional)
-  cursor.parse::<Token![;]>();
-
+  // 3. The end of the stream should be reached.
   if !cursor.is_end() {
     panic!("Expected the end of the token stream.")
   }
 
-  // 10. Build the TokenStream.
+  // ╔═╗┌─┐┌┐┌┌─┐┬─┐┌─┐┌┬┐┌─┐
+  // ║ ╦├┤ │││├┤ ├┬┘├─┤ │ ├┤
+  // ╚═╝└─┘┘└┘└─┘┴└─┴ ┴ ┴ └─┘
 
-  //// pub struct #GENERICS Dada() where #WHERE;
-  //// impl #IMPL_GENERICS Pod for Dada #TYPE_GENERICS where #WHERE {}
+  // A. Build the TokenStream.
   let mut derive = TokenStream::new();
 
-  // 11. "impl" keyworkd
+  // B. "impl" keyworkd
   derive.extend([TokenTree::from(Identifier::new("impl", Span::call_site()))]);
 
-  // 12. Structure generics
-  if let Some(generics) = &generics {
-    derive.extend(generics.collect_impl());
+  // C. Structure generics
+  if let Some(r#struct) = &r#struct {
+    derive.extend(r#struct.collect_impl());
   }
 
-  // 13. Trait to derive
-  derive.extend(TokenStream::from_str(traitt));
+  // D. Trait to derive
+  derive.extend(TokenStream::from_str(r#trait));
 
-  // 14. "for" keyword
+  // E. "for" keyword
   derive.extend([TokenTree::from(Identifier::new("for", Span::call_site()))]);
 
-  // 15. Structure name.
-  derive.extend([TokenTree::from(name)]);
-
-  // 15. Generic types.
-  if let Some(generics) = &generics {
-    derive.extend(generics.collect_types());
+  // F. Structure name.
+  if let Some(r#struct) = &r#struct {
+    derive.extend([TokenTree::from(r#struct.name().clone())]);
   }
 
-  // 16. Brace group
+  // G. Generic types.
+  if let Some(r#struct) = &r#struct {
+    derive.extend(r#struct.collect_types());
+  }
+
+  // H. Brace group
   derive.extend([TokenTree::from(Group::new(Delimiter::Brace, TokenStream::new()))]);
 
   derive

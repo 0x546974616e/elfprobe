@@ -1,5 +1,9 @@
+use proc_macro::TokenTree;
+
 use crate::entry::Identifier;
 use crate::parser::parser;
+use crate::parser::Collect;
+use crate::parser::Union;
 use crate::token::*;
 
 // ╦═╗┬ ┬┬  ┌─┐┌─┐
@@ -28,7 +32,7 @@ parser!(ConstParam = Const Identifier Colon Identifier); // TODO: ": Type (= Blo
 parser!(Lifetime = Quote Identifier); // LifetimeOrLabel
 
 // https://doc.rust-lang.org/reference/trait-bounds.html#trait-and-lifetime-bounds
-parser!(TypeParamBounds = [([Plus?] TypeParamBound)*]);
+parser!(TypeParamBounds = [(TypeParamBound [Plus?])*]);
 parser!(TypeParamBound = (Lifetime | TraitBound));
 parser!(TraitBound = (Parenthesis | TypePath)); // TODO: "? ForLifetimes"
 parser!(LifetimeBounds = [(Lifetime [Plus?])*]);
@@ -45,12 +49,86 @@ parser!(PathIdentSegment = Identifier); // TODO: "$crate"
 // ║  │ │└─┐ │ │ ││││
 // ╚═╝└─┘└─┘ ┴ └─┘┴ ┴
 
-impl StructStruct {
-  fn collect_impl() {
-
+impl StructType {
+  /// Returns the name of the structure.
+  pub(crate) fn name(&self) -> &Identifier {
+    match &self.tree.2 {
+      Union::A(struct_struct) => &struct_struct.tree.1,
+      Union::B(tuple_struct) => &tuple_struct.tree.1,
+      _ => unreachable!(),
+    }
   }
 
-  fn collect_types() {
+  /// Returns all generics with their bounds,
+  /// e.g., `<'a, 'b: 'a + Default, A, B: Debug>`.
+  pub(crate) fn collect_impl(&self) -> Vec<TokenTree> {
+    let mut accumulator = Vec::new();
 
+    match &self.tree.2 {
+      Union::A(struct_struct) => {
+        if let Some(generics) = &struct_struct.tree.2 {
+          generics.collect_into(&mut accumulator);
+        }
+      }
+
+      Union::B(tuple_struct) => {
+        if let Some(generics) = &tuple_struct.tree.2 {
+          generics.collect_into(&mut accumulator);
+        }
+      }
+
+      _ => (),
+    }
+
+    accumulator
+  }
+
+  /// Returns all generic identifiers only,
+  /// e.g., `<'a, 'b: 'a + Default, A, B: Debug>` gives `<'a, 'b, A, b>`.
+  pub(crate) fn collect_types(&self) -> Vec<TokenTree> {
+    let mut tree = Vec::new();
+
+    match &self.tree.2 {
+      Union::A(struct_struct) => {
+        if let Some(generics) = &struct_struct.tree.2 {
+          generics.collect_types_into(&mut tree);
+        }
+      }
+
+      Union::B(tuple_struct) => {
+        if let Some(generics) = &tuple_struct.tree.2 {
+          generics.collect_types_into(&mut tree);
+        }
+      }
+
+      _ => (),
+    }
+
+    tree
+  }
+}
+
+impl GenericParams {
+  /// Returns all generic identifiers only,
+  /// e.g., `<'a, 'b: 'a + Default, A, B: Debug>` gives `<'a, 'b, A, b>`.
+  pub(crate) fn collect_types_into(&self, tree: &mut Vec<TokenTree>) {
+    // Collect the opening angle bracket.
+    self.tree.0.collect_into(tree);
+
+    // Collect all generic identifiers only.
+    for (generic, comma) in self.tree.1.iter() {
+      match &generic.tree.1 {
+        Union::A(lifetime) => lifetime.tree.0.collect_into(tree),
+        Union::B(parameter) => parameter.tree.0.collect_into(tree),
+        Union::C(constant) => constant.tree.0.collect_into(tree),
+        _ => (),
+      }
+
+      // Collect the generics separator (comma).
+      comma.collect_into(tree);
+    }
+
+    // Collect the closing angle bracket.
+    self.tree.2.collect_into(tree);
   }
 }
