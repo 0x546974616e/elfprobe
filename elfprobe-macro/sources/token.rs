@@ -32,7 +32,8 @@ macro_rules! create_token {
 
     impl fmt::Debug for $name {
       fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.token.to_string().fmt(formatter)
+        formatter.write_str(stringify!($name))
+        // self.token.to_string().fmt(formatter)
         // self.token.fmt(formatter)
       }
     }
