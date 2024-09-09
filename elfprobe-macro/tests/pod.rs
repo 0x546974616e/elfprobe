@@ -358,6 +358,34 @@ mod tests {
     }
   }
 
+  mod r#where {
+    use super::*;
+
+    #[test]
+    fn one_where_item() {
+      #[derive(Pod, Default)]
+      #[allow(dead_code)]
+      pub(super) struct Albator<A>
+      where
+        A: a::A + Default,
+      {
+        a: A,
+      }
+      pod::test(Albator::<isize>::default());
+    }
+
+    #[test]
+    fn multiple_where_items() {
+      #[derive(Pod)]
+      #[allow(dead_code)]
+      pub(super) struct Goldorak<A, B>(A, B)
+      where
+        A: a::A,
+        B: a::b::B + self::Fafa + a::Foo;
+      pod::test(Goldorak(1u8, 2i16));
+    }
+  }
+
   mod mix {
     use super::*;
 
@@ -376,11 +404,19 @@ mod tests {
         B: self::Gaga + crate::a::b::B,
         C,
         D: Here + 'b + Haha,
-      > {
+        E,
+        F,
+      >
+      where
+        E: 'a + a::b::B + 'static,
+        F: Default,
+      {
         a: PhantomData<&'a B>,
         b: PhantomData<&'b A>,
         c: C,
         d: D,
+        e: PhantomData<&'static E>,
+        f: F,
       }
 
       pod::test(Dada {
@@ -388,6 +424,8 @@ mod tests {
         b: PhantomData::<&u128>,
         c: 1isize,
         d: 2u8,
+        e: PhantomData::<&i32>,
+        f: u64::default(),
       })
     }
   }

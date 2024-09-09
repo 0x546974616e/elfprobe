@@ -12,8 +12,8 @@ use crate::token::*;
 
 // https://doc.rust-lang.org/reference/items/structs.html#structs
 parser!(StructType = [OuterAttribute*] [Visibility?] (StructStruct | TupleStruct));
-parser!(StructStruct = Struct Identifier [GenericParams?] (Brace | SemiColon));
-parser!(TupleStruct = Struct Identifier [GenericParams?] Parenthesis SemiColon);
+parser!(StructStruct = Struct Identifier [GenericParams?] [WhereClause?] (Brace | SemiColon));
+parser!(TupleStruct = Struct Identifier [GenericParams?] Parenthesis [WhereClause?] SemiColon);
 
 // https://doc.rust-lang.org/reference/attributes.html
 parser!(OuterAttribute = Hash Bracket );
@@ -45,6 +45,12 @@ parser!(TypePathSegment = PathIdentSegment); // TODO: ":: (GenericArgs | TypePat
 // https://doc.rust-lang.org/reference/paths.html#paths-in-expressions
 parser!(PathIdentSegment = Identifier); // TODO: "$crate"
 
+// https://doc.rust-lang.org/reference/items/generics.html#where-clauses
+parser!(WhereClause = Where [(WhereClauseItem [Comma?])+]);
+parser!(WhereClauseItem = LifetimeWhereClauseItem | TypeBoundWhereClauseItem);
+parser!(LifetimeWhereClauseItem = Lifetime Colon LifetimeBounds);
+parser!(TypeBoundWhereClauseItem = Identifier Colon TypeParamBounds); // TODO: "ForLifetimes Type:"
+
 // ╔═╗┬ ┬┌─┐┌┬┐┌─┐┌┬┐
 // ║  │ │└─┐ │ │ ││││
 // ╚═╝└─┘└─┘ ┴ └─┘┴ ┴
@@ -62,49 +68,86 @@ impl StructType {
   /// Returns all generics with their bounds,
   /// e.g., `<'a, 'b: 'a + Default, A, B: Debug>`.
   pub(crate) fn collect_impl(&self) -> Vec<TokenTree> {
-    let mut accumulator = Vec::new();
-
+    let mut tree = Vec::new();
     match &self.tree.2 {
-      Union::A(struct_struct) => {
-        if let Some(generics) = &struct_struct.tree.2 {
-          generics.collect_into(&mut accumulator);
-        }
-      }
-
-      Union::B(tuple_struct) => {
-        if let Some(generics) = &tuple_struct.tree.2 {
-          generics.collect_into(&mut accumulator);
-        }
-      }
-
-      _ => (),
+      Union::A(struct_struct) => struct_struct.collect_impl_into(&mut tree),
+      Union::B(tuple_struct) => tuple_struct.collect_impl_into(&mut tree),
+      _ => unreachable!(),
     }
-
-    accumulator
+    tree
   }
 
   /// Returns all generic identifiers only,
   /// e.g., `<'a, 'b: 'a + Default, A, B: Debug>` gives `<'a, 'b, A, b>`.
   pub(crate) fn collect_types(&self) -> Vec<TokenTree> {
     let mut tree = Vec::new();
-
     match &self.tree.2 {
-      Union::A(struct_struct) => {
-        if let Some(generics) = &struct_struct.tree.2 {
-          generics.collect_types_into(&mut tree);
-        }
-      }
-
-      Union::B(tuple_struct) => {
-        if let Some(generics) = &tuple_struct.tree.2 {
-          generics.collect_types_into(&mut tree);
-        }
-      }
-
-      _ => (),
+      Union::A(struct_struct) => struct_struct.collect_types_into(&mut tree),
+      Union::B(tuple_struct) => tuple_struct.collect_types_into(&mut tree),
+      _ => unreachable!(),
     }
-
     tree
+  }
+
+  /// Returns the structure where clause, e.g., `where A: Default, B: 'a + foo::Bar`
+  pub(crate) fn collect_where_clause(&self) -> Vec<TokenTree> {
+    let mut tree = Vec::new();
+    match &self.tree.2 {
+      Union::A(struct_struct) => struct_struct.collect_where_clause_into(&mut tree),
+      Union::B(tuple_struct) => tuple_struct.collect_where_clause_into(&mut tree),
+      _ => unreachable!(),
+    }
+    tree
+  }
+}
+
+impl StructStruct {
+  /// Returns all generics with their bounds,
+  /// e.g., `<'a, 'b: 'a + Default, A, B: Debug>`.
+  pub(crate) fn collect_impl_into(&self, tree: &mut Vec<TokenTree>) {
+    if let Some(generics) = &self.tree.2 {
+      generics.collect_into(tree);
+    }
+  }
+
+  /// Returns all generic identifiers only,
+  /// e.g., `<'a, 'b: 'a + Default, A, B: Debug>` gives `<'a, 'b, A, b>`.
+  pub(crate) fn collect_types_into(&self, tree: &mut Vec<TokenTree>) {
+    if let Some(generics) = &self.tree.2 {
+      generics.collect_types_into(tree);
+    }
+  }
+
+  /// Returns the structure where clause, e.g., `where A: Default, B: 'a + foo::Bar`
+  pub(crate) fn collect_where_clause_into(&self, tree: &mut Vec<TokenTree>) {
+    if let Some(r#where) = &self.tree.3 {
+      r#where.collect_into(tree);
+    }
+  }
+}
+
+impl TupleStruct {
+  /// Returns all generics with their bounds,
+  /// e.g., `<'a, 'b: 'a + Default, A, B: Debug>`.
+  pub(crate) fn collect_impl_into(&self, tree: &mut Vec<TokenTree>) {
+    if let Some(generics) = &self.tree.2 {
+      generics.collect_into(tree);
+    }
+  }
+
+  /// Returns all generic identifiers only,
+  /// e.g., `<'a, 'b: 'a + Default, A, B: Debug>` gives `<'a, 'b, A, b>`.
+  pub(crate) fn collect_types_into(&self, tree: &mut Vec<TokenTree>) {
+    if let Some(generics) = &self.tree.2 {
+      generics.collect_types_into(tree);
+    }
+  }
+
+  /// Returns the structure where clause, e.g., `where A: Default, B: 'a + foo::Bar`
+  pub(crate) fn collect_where_clause_into(&self, tree: &mut Vec<TokenTree>) {
+    if let Some(r#where) = &self.tree.4 {
+      r#where.collect_into(tree);
+    }
   }
 }
 

@@ -70,7 +70,12 @@ pub(crate) fn derive(stream: TokenStream, r#trait: &str) -> TokenStream {
     derive.extend(r#struct.collect_types());
   }
 
-  // H. Brace group
+  // H. Where clause
+  if let Some(r#struct) = &r#struct {
+    derive.extend(r#struct.collect_where_clause());
+  }
+
+  // I. Brace group
   derive.extend([TokenTree::from(Group::new(Delimiter::Brace, TokenStream::new()))]);
 
   derive

@@ -49,8 +49,8 @@ macro_rules! define {
 
   () => {
     // Union and Sequence are limited to 5 elements.
-    // (Keep the same pattern, `A..E` and `4..0`, mandatory to work)
-    define!(A.4, B.3, C.2, D.1, E.0);
+    // (Keep the same pattern, `A..F` and `5..0`, mandatory to work)
+    define!(A.5, B.4, C.3, D.2, E.1, F.0);
   };
 
   ($($l:tt.$d:tt),+) => {
@@ -139,7 +139,7 @@ define!();
 ///
 /// - **Notes**:
 ///
-///   - Sequences and alternatives are currently limited to 5 elements
+///   - Sequences and alternatives are currently limited to 6 elements
 ///     (easy to change, see [`define!()`][define!()] macro for details).
 ///   - Repetitions must have parenthesis when including a non-terminal
 ///     (e.g. `[(A B)?]`).
@@ -313,6 +313,10 @@ macro_rules! parser {
     parser!(#parse( $input, A($a), B($b), C($c), D($d), E($e) ))
   };
 
+  (%parse( $input:ident, $a:tt, $b:tt, $c:tt, $d:tt, $e:tt, $f:tt )) => {
+    parser!(#parse( $input, A($a), B($b), C($c), D($d), E($e), F($f) ))
+  };
+
   (#parse( $input:ident, $( $variant:tt($tt:tt) ),+ )) => {
     {
       if false { None }
@@ -335,7 +339,7 @@ macro_rules! parser {
             match { parser!(@parse( $input, $tt )) } {
               Some(value) => value,
               None => {
-                $input.merge(behind);
+                $input.merge(behind); // Reset cursor.
                 return None;
               }
             },
