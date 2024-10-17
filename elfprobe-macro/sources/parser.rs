@@ -9,7 +9,7 @@ pub(crate) trait Parse: Sized {
 }
 
 pub(crate) trait Peek {
-  // Checks required match, does not move the cursor.
+  // Checks match without moving the cursor.
   fn peek(stream: Stream) -> bool;
 }
 
@@ -48,7 +48,7 @@ macro_rules! define {
   // Completely unreadable and unnecessary (kind of).
 
   () => {
-    // Union and Sequence are limited to 5 elements.
+    // Union and Sequence are currently limited to 6 elements.
     // (Keep the same pattern, `A..F` and `5..0`, mandatory to work)
     define!(A.5, B.4, C.3, D.2, E.1, F.0);
   };
@@ -139,14 +139,15 @@ define!();
 ///
 /// - **Notes**:
 ///
-///   - Sequences and alternatives are currently limited to 6 elements
+///   - Sequences and [alternatives][Union] are currently limited to 6 elements
 ///     (easy to change, see [`define!()`][define!()] macro for details).
 ///   - Repetitions must have parenthesis when including a non-terminal
 ///     (e.g. `[(A B)?]`).
+///   - `[[A?]*]` causes an infinite loop, simply rewrite it as `[A*]`.
 ///
 /// - **Example**:
 ///
-/// The following declaration,
+/// The following definition
 ///
 /// ```ignore
 /// parser!(StructType = [OuterAttribute*] [Visibility?] (StructStruct | TupleStruct));

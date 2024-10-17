@@ -15,3 +15,11 @@ mod token;
 pub fn pod_derive(input: TokenStream) -> TokenStream {
   crate::derive::derive(input, "crate::pod::Pod")
 }
+
+// TODO:
+// - upper
+// - lower
+// - pascal
+// - snake
+// - camel
+// - concat( dada = ...) { fn #dada() {} }

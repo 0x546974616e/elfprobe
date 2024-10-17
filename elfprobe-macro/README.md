@@ -11,7 +11,7 @@ Here two solutions to implement the `Pod` derive macro.
 
 ### Solution 1: Write a `TokenStream` parser by hand from scratch
 
-See [`sources/`](./sources/) (still WIP).
+See [`sources/`](./sources/).
 
 So far, only a subset of Rust language is supported.
 

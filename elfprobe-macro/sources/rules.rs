@@ -19,7 +19,7 @@ parser!(TupleStruct = Struct Identifier [GenericParams?] Parenthesis [WhereClaus
 parser!(OuterAttribute = Hash Bracket );
 
 // https://doc.rust-lang.org/reference/visibility-and-privacy.html
-parser!(Visibility = Pub[Parenthesis?]);
+parser!(Visibility = Pub [Parenthesis?]);
 
 // https://doc.rust-lang.org/reference/items/generics.html#generic-parameters
 parser!(GenericParams = Lt [(GenericParam [Comma?])*] Gt);
@@ -33,8 +33,8 @@ parser!(Lifetime = Quote Identifier); // LifetimeOrLabel
 
 // https://doc.rust-lang.org/reference/trait-bounds.html#trait-and-lifetime-bounds
 parser!(TypeParamBounds = [(TypeParamBound [Plus?])*]);
-parser!(TypeParamBound = (Lifetime | TraitBound));
-parser!(TraitBound = (Parenthesis | TypePath)); // TODO: "? ForLifetimes"
+parser!(TypeParamBound = Lifetime | TraitBound);
+parser!(TraitBound = Parenthesis | TypePath); // TODO: "? ForLifetimes"
 parser!(LifetimeBounds = [(Lifetime [Plus?])*]);
 
 // https://doc.rust-lang.org/reference/paths.html#paths-in-types

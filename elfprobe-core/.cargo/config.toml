@@ -1,3 +1,5 @@
 [alias]
 tu = "test --features unaligned"
 ta = "test --no-default-features"
+ttu = "tu -- --nocapture"
+tta = "ta -- --nocapture"

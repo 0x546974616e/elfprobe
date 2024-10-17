@@ -97,6 +97,17 @@ macro_rules! impl_primitive_format {
     impl<Endianness: self::Endianness> fmt::Debug for $struct<Endianness> {
       // '_ are "elided" lifetimes, i.e. the compiler infers the lifetime.
       fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // https://stdrs.dev/nightly/x86_64-pc-windows-gnu/src/core/fmt/rt.rs.html#57-64
+        const DEBUG_LOWER_HEX: u32 = (1 << 4); //  10000
+        const DEBUG_UPPER_HEX: u32 = (1 << 5); // 100000
+
+        #[allow(deprecated)]
+        // TODO: Temporary because deprecated.
+        // https://doc.rust-lang.org/1.81.0/src/core/fmt/mod.rs.html#1919-1927
+        if formatter.flags() & (DEBUG_LOWER_HEX | DEBUG_UPPER_HEX) != 0 {
+          return self.get().fmt(formatter);
+        }
+
         // TODO: self.0 when a X/x/o/b formatting is specified.
         formatter
           .debug_tuple(stringify!($struct))

@@ -13,8 +13,8 @@ use crate::rules::StructType;
 
 ///
 /// ```txt
-/// pub struct #GENERICS Dada {...} where #WHERE;
-/// impl #IMPL_GENERICS #TRAIT for Dada #TYPE_GENERICS where #WHERE {}
+/// pub struct #GENERICS #IDENTIFIER {...} where #WHERE;
+/// impl #IMPL_GENERICS #TRAIT for #IDENTIFIER #TYPE_GENERICS where #WHERE {}
 /// ```
 ///
 pub(crate) fn derive(stream: TokenStream, r#trait: &str) -> TokenStream {
@@ -46,7 +46,7 @@ pub(crate) fn derive(stream: TokenStream, r#trait: &str) -> TokenStream {
   // A. Build the TokenStream.
   let mut derive = TokenStream::new();
 
-  // B. "impl" keyworkd
+  // B. "impl" keyword
   derive.extend([TokenTree::from(Identifier::new("impl", Span::call_site()))]);
 
   // C. Structure generics
