@@ -51,7 +51,7 @@ macro_rules! define_constants {
   ) => {
     #[doc = $description]
     mod $module {
-      use $crate::constant::Constant;
+      use $crate::utils::Constant;
 
       $(
         #[allow(unused)]

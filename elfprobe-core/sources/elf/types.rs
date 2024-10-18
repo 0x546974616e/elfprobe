@@ -4,8 +4,8 @@ use std::marker::PhantomData;
 
 use elfprobe_macro::Pod;
 
-use crate::endian::Endianness;
-use crate::pod::Pod;
+use crate::core::Endianness;
+use crate::core::Pod;
 
 use super::aliases::{Elf32, Elf64};
 

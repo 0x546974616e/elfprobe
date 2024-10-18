@@ -1,10 +1,10 @@
 use proc_macro::TokenTree;
 
-use crate::entry::Identifier;
-use crate::parser::parser;
-use crate::parser::Collect;
-use crate::parser::Union;
-use crate::token::*;
+use super::entry::Identifier;
+use super::parser::parser;
+use super::parser::Collect;
+use super::parser::Union;
+use super::token::*;
 
 // ╦═╗┬ ┬┬  ┌─┐┌─┐
 // ╠╦╝│ ││  ├┤ └─┐

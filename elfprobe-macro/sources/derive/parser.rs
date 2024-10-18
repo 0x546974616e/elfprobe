@@ -1,4 +1,4 @@
-use crate::cursor::Cursor;
+use super::cursor::Cursor;
 use proc_macro::TokenTree;
 
 pub(crate) type Stream<'buffer> = &'buffer Cursor<'buffer>;
@@ -194,14 +194,14 @@ macro_rules! parser {
       }
     }
 
-    impl $crate::parser::Collect for $rule {
+    impl $crate::derive::parser::Collect for $rule {
       fn collect_into(&self, tree: &mut Vec<proc_macro::TokenTree>) {
         self.tree.collect_into(tree);
       }
     }
 
-    impl $crate::parser::Parse for $rule {
-      fn parse(input: $crate::parser::Stream) -> Option<Self> {
+    impl $crate::derive::parser::Parse for $rule {
+      fn parse(input: $crate::derive::parser::Stream) -> Option<Self> {
         { parser!(@parse( input, ($($tt)+) )) }.map(
           | tree | $rule { tree }
         )
@@ -236,7 +236,7 @@ macro_rules! parser {
 
   // Alternatives TT.
   (@type( ($($tt:tt)|+) )) => {
-    $crate::parser::Union<$(parser!(@type( $tt )),)+>
+    $crate::derive::parser::Union<$(parser!(@type( $tt )),)+>
   };
 
   // Sequence of TT.
@@ -323,7 +323,7 @@ macro_rules! parser {
       if false { None }
       $(
         else if let Some(value) = { parser!(@parse( $input, $tt )) } {
-          Some($crate::parser::Union::$variant(value))
+          Some($crate::derive::parser::Union::$variant(value))
         }
       )+
       else { None }

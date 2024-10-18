@@ -4,6 +4,7 @@ trait Fafa {}
 trait Gaga {}
 trait Haha {}
 
+use pod as core;
 mod pod {
   pub trait Pod {}
   pub fn test(_: impl Pod) {}

@@ -2,7 +2,7 @@ use std::fmt;
 
 use elfprobe_macro::Pod;
 
-use crate::constant::define_constants;
+use crate::utils::define_constants;
 
 use super::magic::Magic;
 use super::types::ElfType;
@@ -106,7 +106,7 @@ fn test_elf_identification_memory_size() {
   use std::mem::size_of;
 
   use super::types::{ElfType32, ElfType64};
-  use crate::endian::{BigEndian, LittleEndian};
+  use crate::core::{BigEndian, LittleEndian};
 
   type ElfIdentification32<Endianness> = ElfIdentification<ElfType32<Endianness>>;
   type ElfIdentification64<Endianness> = ElfIdentification<ElfType64<Endianness>>;

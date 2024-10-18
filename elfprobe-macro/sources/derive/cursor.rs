@@ -3,14 +3,14 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::ops::Range;
 
-use crate::buffer::Buffer;
-use crate::entry::Entry;
-use crate::entry::Group;
-use crate::entry::Identifier;
-use crate::entry::Literal;
-use crate::entry::Punctuation;
-use crate::parser::Parse;
-use crate::parser::Peek;
+use super::buffer::Buffer;
+use super::entry::Entry;
+use super::entry::Group;
+use super::entry::Identifier;
+use super::entry::Literal;
+use super::entry::Punctuation;
+use super::parser::Parse;
+use super::parser::Peek;
 
 // ╦ ╦┌─┐┌─┐┌┬┐
 // ╠═╣├┤ ├─┤ ││

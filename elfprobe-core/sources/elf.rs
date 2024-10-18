@@ -19,10 +19,10 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::marker::PhantomData;
 
-use crate::endian::{BigEndian, Endianness, LittleEndian};
-use crate::error::BytesError;
-use crate::pod::Pod;
-use crate::primitive::{I16, I32, I64, U16, U32, U64};
+use crate::core::BytesError;
+use crate::core::Pod;
+use crate::core::{BigEndian, Endianness, LittleEndian};
+use crate::core::{I16, I32, I64, U16, U32, U64};
 use elfprobe_macro::Pod;
 
 // ╔═╗┬  ┬┌─┐┌─┐┌─┐┌─┐
@@ -37,10 +37,10 @@ use elfprobe_macro::Pod;
 // ╠╣ ││  ├┤
 // ╚  ┴┴─┘└─┘
 
-use crate::reader::Reader;
+use crate::core::Reader;
 
 #[cfg(any(test, doc, clippy))]
-use crate::hex::hex;
+use crate::utils::hex;
 
 // #[derive(Debug)]
 pub struct ElfObject<'data, Reader, ElfType>

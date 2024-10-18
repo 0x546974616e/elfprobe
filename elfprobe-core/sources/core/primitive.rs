@@ -1,7 +1,7 @@
 use std::fmt;
 use std::marker::PhantomData;
 
-use crate::endian::Endianness;
+use super::endian::Endianness;
 use elfprobe_macro::Pod;
 
 // https://rust-exercises.com/100-exercises/04_traits/02_orphan_rule
@@ -141,8 +141,7 @@ macro_rules! impl_primitive_format {
 // #[doc(cfg(not(feature = "unaligned")))]
 #[cfg(any(clippy, doc, not(feature = "unaligned")))]
 mod aligned {
-  use super::*;
-  use crate::endian::AlignedEndianOperation;
+  use super::{super::endian::AlignedEndianOperation, *};
 
   create_primitive!(AlignedI16, I16, i16, i16, AlignedEndianOperation<i16>);
   create_primitive!(AlignedU16, U16, u16, u16, AlignedEndianOperation<u16>);
@@ -155,8 +154,7 @@ mod aligned {
 // #[doc(cfg(feature = "unaligned")]
 #[cfg(any(clippy, doc, feature = "unaligned"))]
 mod unaligned {
-  use super::*;
-  use crate::endian::UnalignedEndianOperation;
+  use super::{super::endian::UnalignedEndianOperation, *};
 
   create_primitive!(UnalignedI16, I16, i16, [u8; 2], UnalignedEndianOperation<i16, 2>);
   create_primitive!(UnalignedU16, U16, u16, [u8; 2], UnalignedEndianOperation<u16, 2>);
@@ -183,8 +181,7 @@ pub use unaligned::{I16, I32, I64, U16, U32, U64};
 
 #[cfg(test)]
 mod tests {
-  use super::*;
-  use crate::endian::*;
+  use super::{super::endian::*, *};
 
   macro_rules! test_primitive {
     () => {

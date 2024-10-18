@@ -22,7 +22,7 @@ fn to_capitalized(string: &str) -> String {
 // NOTE:
 // Wrapping errors has been deliberately chosen instead boxing them (Box<dyn>)
 // in order to try out other ways of playing with errors in Rust. It may
-// therefore be a clumsy way of using them.
+// be a clumsy way of using them.
 
 // https://doc.rust-lang.org/rust-by-example/error/multiple_error_types/boxing_errors.html
 // https://doc.rust-lang.org/rust-by-example/error/multiple_error_types/wrap_error.html

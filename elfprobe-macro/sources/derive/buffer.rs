@@ -1,8 +1,8 @@
 use proc_macro::TokenStream;
 use std::ops::Range;
 
-use crate::cursor::Cursor;
-use crate::entry::Entry;
+use super::cursor::Cursor;
+use super::entry::Entry;
 
 #[derive(Debug)]
 // Highly inspired by `syn`, clever ideas.

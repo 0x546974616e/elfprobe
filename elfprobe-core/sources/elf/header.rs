@@ -1,6 +1,6 @@
 use elfprobe_macro::Pod;
 
-use crate::constant::define_constants;
+use crate::utils::define_constants;
 
 use super::identification::ElfIdentification;
 use super::types::ElfType;

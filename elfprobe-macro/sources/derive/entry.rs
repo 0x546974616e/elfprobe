@@ -6,10 +6,10 @@ use proc_macro::TokenTree;
 // Internal interface for communicating between a proc_macro client (a proc
 // macro crate) and a proc_macro server (a compiler front-end).
 
-use crate::parser::Collect;
-use crate::parser::Parse;
-use crate::parser::Peek;
-use crate::parser::Stream;
+use super::parser::Collect;
+use super::parser::Parse;
+use super::parser::Peek;
+use super::parser::Stream;
 
 pub(crate) use proc_macro::Delimiter;
 pub(crate) use proc_macro::Group;

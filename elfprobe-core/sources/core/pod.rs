@@ -2,7 +2,7 @@
 use std::mem::align_of;
 use std::mem::size_of;
 
-use crate::error::BytesError;
+use super::error::BytesError;
 
 ///
 /// TLDR: A POD type is a bag of bits with no magic.

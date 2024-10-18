@@ -5,11 +5,18 @@ use proc_macro::Span;
 use proc_macro::TokenStream;
 use proc_macro::TokenTree;
 
-use crate::buffer::Buffer;
-use crate::entry::Group;
-use crate::entry::Identifier;
-use crate::parser::Parse;
-use crate::rules::StructType;
+mod buffer;
+mod cursor;
+mod entry;
+mod parser;
+mod rules;
+mod token;
+
+use buffer::Buffer;
+use entry::Group;
+use entry::Identifier;
+use parser::Parse;
+use rules::StructType;
 
 ///
 /// ```txt

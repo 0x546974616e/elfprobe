@@ -1,15 +1,15 @@
 use proc_macro::TokenTree;
 use std::fmt;
 
-use crate::entry::Delimiter;
-use crate::entry::Group;
-use crate::entry::Identifier;
-use crate::entry::Punctuation;
+use super::entry::Delimiter;
+use super::entry::Group;
+use super::entry::Identifier;
+use super::entry::Punctuation;
 
-use crate::parser::Collect;
-use crate::parser::Parse;
-use crate::parser::Peek;
-use crate::parser::Stream;
+use super::parser::Collect;
+use super::parser::Parse;
+use super::parser::Peek;
+use super::parser::Stream;
 
 macro_rules! create_token {
   (

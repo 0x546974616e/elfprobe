@@ -1,7 +1,7 @@
 use std::mem::size_of;
 
-use crate::error::BytesError;
-use crate::pod::Pod;
+use super::error::BytesError;
+use super::pod::Pod;
 
 ///
 /// Declare a trait to abstract the reading of data or data blocks. In this way,

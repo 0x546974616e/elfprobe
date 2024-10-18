@@ -1,4 +1,4 @@
-use crate::primitive::{I16, I32, I64, U16, U32, U64};
+use crate::core::{I16, I32, I64, U16, U32, U64};
 
 /// 32-bit ELF base types.
 /// See `/usr/include{/linux,}/elf.h`

@@ -71,17 +71,12 @@ https://maskray.me/blog/2021-01-31-metadata-sections-comdat-and-shf-link-order
 use std::env;
 use std::fs::File;
 
-mod constant;
+mod core;
 mod elf;
-mod endian;
-mod error;
-mod file;
-mod pod;
-mod primitive;
-mod reader;
+mod utils;
 
-#[cfg(any(test, doc, clippy))]
-mod hex;
+// #[cfg(any(test, doc, clippy))]
+// mod hex;
 
 use std::io;
 
@@ -109,7 +104,7 @@ fn test_file() -> io::Result<()> {
 }
 
 fn main() {
-  use crate::file::MappedFile;
+  use crate::utils::MappedFile;
   use crate::*;
   use std::path::Path;
 
