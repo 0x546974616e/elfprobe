@@ -71,7 +71,7 @@ https://maskray.me/blog/2021-01-31-metadata-sections-comdat-and-shf-link-order
 use std::env;
 use std::fs::File;
 
-// mod MappedFile;
+mod constant;
 mod elf;
 mod endian;
 mod error;

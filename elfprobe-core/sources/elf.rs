@@ -1,6 +1,16 @@
 #![allow(non_camel_case_types)] // TODO: Temporary?
 #![allow(unused)] // TODO: Temporary
 
+pub mod aliases;
+pub mod header;
+pub mod identification;
+pub mod magic;
+pub mod types;
+
+use header::ElfHeader;
+use identification::ElfIdentification;
+use types::{ElfType, ElfType32, ElfType64};
+
 // https://github.com/rust-lang/rfcs/blob/master/text/1210-impl-specialization.md
 // https://rust-lang.github.io/rfcs/1210-impl-specialization.html#the-default-keyword
 // https://users.rust-lang.org/t/whats-default-fn/105388/6
@@ -19,130 +29,9 @@ use elfprobe_macro::Pod;
 // ╠═╣│  │├─┤└─┐├┤ └─┐
 // ╩ ╩┴─┘┴┴ ┴└─┘└─┘└─┘
 
-// 32-bit ELF base types.
-// See /usr/include{/linux,}/elf.h
-pub type Elf32_Addr<E> = U32<E>;
-pub type Elf32_Half<E> = U16<E>;
-pub type Elf32_Off<E> = U32<E>;
-pub type Elf32_Sword<E> = I32<E>;
-pub type Elf32_Word<E> = U32<E>;
-
-// 64-bit ELF base types.
-// See /usr/include{/linux,}/elf.h
-pub type Elf64_Addr<E> = U64<E>;
-pub type Elf64_Half<E> = U16<E>;
-pub type Elf64_SHalf<E> = I16<E>;
-pub type Elf64_Off<E> = U64<E>;
-pub type Elf64_Sword<E> = I32<E>;
-pub type Elf64_Word<E> = U32<E>;
-pub type Elf64_Xword<E> = U64<E>;
-pub type Elf64_Sxword<E> = I64<E>;
-
-// ╔╦╗┬ ┬┌─┐┌─┐┌─┐
-//  ║ └┬┘├─┘├┤ └─┐
-//  ╩  ┴ ┴  └─┘└─┘
-
-// Trait aliases are still experimental.
-pub trait Type: Pod + Debug + Default {}
-impl<T> Type for T where T: Pod + Debug + Default {}
-
-pub trait ElfType: Type {
-  type Endian: self::Endianness;
-
-  /// Unsigned program address
-  type Addr: Type;
-
-  /// Unsigned medium integer
-  type Half: Type;
-
-  /// Unsigned file offset
-  type Off: Type;
-
-  /// Signed large integer
-  type Sword: Type;
-
-  /// Unsigned small integer
-  type Uchar: Type;
-
-  /// Unsigned large integer
-  type Word: Type;
-}
-
-#[derive(Debug, Default, Copy, Clone, Pod)]
-pub struct ElfType32<E: self::Endianness>(PhantomData<E>);
-impl<E: self::Endianness> ElfType for ElfType32<E> {
-  type Endian = E;
-  type Addr = Elf32_Addr<E>;
-  type Half = Elf32_Half<E>;
-  type Off = Elf32_Off<E>;
-  type Sword = Elf32_Sword<E>;
-  type Uchar = u8; // Unsigned C char
-  type Word = Elf32_Word<E>;
-}
-
-#[derive(Debug, Default, Copy, Clone, Pod)]
-pub struct ElfType64<E: self::Endianness>(PhantomData<E>);
-impl<E: self::Endianness> ElfType for ElfType64<E> {
-  type Endian = E;
-  type Addr = Elf64_Addr<E>;
-  type Half = Elf64_Half<E>;
-  type Off = Elf64_Off<E>;
-  type Sword = Elf64_Sword<E>;
-  type Uchar = u8; // Unsigned C char
-  type Word = Elf64_Word<E>;
-}
-
 // ╔═╗┌┬┐┬─┐┬ ┬┌─┐┌┬┐
 // ╚═╗ │ ├┬┘│ ││   │
 // ╚═╝ ┴ ┴└─└─┘└─┘ ┴
-
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Pod)]
-pub struct ElfIdentification<ElfType: self::ElfType> {
-  pub ei_mag0: ElfType::Uchar,
-  pub ei_mag1: ElfType::Uchar,
-  pub ei_mag2: ElfType::Uchar,
-  pub ei_mag3: ElfType::Uchar,
-  pub ei_class: ElfType::Uchar,
-  pub ei_data: ElfType::Uchar,
-  pub ei_version: ElfType::Uchar,
-  pub ei_osabi: ElfType::Uchar,      // Not specified in elf32 but ok.
-  pub ei_abiversion: ElfType::Uchar, // Not specified in elf32 but ok.
-  pub ei_pad: [ElfType::Uchar; 7],
-}
-
-#[test]
-fn test_elf_identification_memory_size() {
-  use crate::endian::{BigEndian, LittleEndian};
-  use std::mem::size_of;
-
-  type ElfIdentification32<Endianness> = ElfIdentification<ElfType32<Endianness>>;
-  type ElfIdentification64<Endianness> = ElfIdentification<ElfType64<Endianness>>;
-
-  assert_eq!(size_of::<ElfIdentification32<BigEndian>>(), 16, "BE 32-bits");
-  assert_eq!(size_of::<ElfIdentification64<BigEndian>>(), 16, "BE 64-bits");
-  assert_eq!(size_of::<ElfIdentification32<LittleEndian>>(), 16, "LE 32-bits");
-  assert_eq!(size_of::<ElfIdentification64<LittleEndian>>(), 16, "LE 64-bits");
-}
-
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone, Pod)]
-pub struct ElfHeader<ElfType: self::ElfType> {
-  pub e_ident: ElfIdentification<ElfType>,
-  pub e_type: ElfType::Half,
-  pub e_machine: ElfType::Half,
-  pub e_version: ElfType::Word,
-  pub e_entry: ElfType::Addr,
-  pub e_phoff: ElfType::Off,
-  pub e_shoff: ElfType::Off,
-  pub e_flags: ElfType::Word,
-  pub e_ehsize: ElfType::Half,
-  pub e_phentsize: ElfType::Half,
-  pub e_phnum: ElfType::Half,
-  pub e_shentsize: ElfType::Half,
-  pub e_shnum: ElfType::Half,
-  pub e_shstrndx: ElfType::Half,
-}
 
 // ╔═╗┬┬  ┌─┐
 // ╠╣ ││  ├┤
@@ -154,7 +43,7 @@ use crate::reader::Reader;
 use crate::hex::hex;
 
 // #[derive(Debug)]
-pub struct _ElfFile<'data, Reader, ElfType>
+pub struct ElfObject<'data, Reader, ElfType>
 where
   Reader: self::Reader<'data>,
   ElfType: self::ElfType,
@@ -164,17 +53,18 @@ where
   data: Reader,
 }
 
-impl<'data, Reader, ElfType> Debug for _ElfFile<'data, Reader, ElfType>
+impl<'data, Reader, ElfType> Debug for ElfObject<'data, Reader, ElfType>
 where
   Reader: self::Reader<'data>,
   ElfType: self::ElfType,
 {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    eprintln!("{:#}", self.header.e_ident);
     f.debug_struct("_ElfFile").field("header", &self.header).finish()
   }
 }
 
-impl<'data, Reader, ElfType> _ElfFile<'data, Reader, ElfType>
+impl<'data, Reader, ElfType> ElfObject<'data, Reader, ElfType>
 where
   Reader: self::Reader<'data>,
   ElfType: self::ElfType,
@@ -187,10 +77,10 @@ where
 
 #[derive(Debug)]
 pub enum ElfFile<'data, Reader: self::Reader<'data>> {
-  Elf32Be(_ElfFile<'data, Reader, ElfType32<BigEndian>>),
-  Elf64Be(_ElfFile<'data, Reader, ElfType64<BigEndian>>),
-  Elf32Le(_ElfFile<'data, Reader, ElfType32<LittleEndian>>),
-  Elf64Le(_ElfFile<'data, Reader, ElfType64<LittleEndian>>),
+  Elf32Be(ElfObject<'data, Reader, ElfType32<BigEndian>>),
+  Elf64Be(ElfObject<'data, Reader, ElfType64<BigEndian>>),
+  Elf32Le(ElfObject<'data, Reader, ElfType32<LittleEndian>>),
+  Elf64Le(ElfObject<'data, Reader, ElfType64<LittleEndian>>),
 }
 
 #[allow(unused)]
@@ -207,10 +97,10 @@ where
     None => Err(BytesError::Empty), // TODO: TMP Err("No class/data"),
     Some(format) => {
       match *format {
-        [1, 1] => Ok(ElfFile::Elf32Le(_ElfFile::parse(data)?)),
-        [2, 1] => Ok(ElfFile::Elf64Le(_ElfFile::parse(data)?)),
-        [1, 2] => Ok(ElfFile::Elf32Be(_ElfFile::parse(data)?)),
-        [2, 2] => Ok(ElfFile::Elf64Be(_ElfFile::parse(data)?)),
+        [1, 1] => Ok(ElfFile::Elf32Le(ElfObject::parse(data)?)),
+        [2, 1] => Ok(ElfFile::Elf64Le(ElfObject::parse(data)?)),
+        [1, 2] => Ok(ElfFile::Elf32Be(ElfObject::parse(data)?)),
+        [2, 2] => Ok(ElfFile::Elf64Be(ElfObject::parse(data)?)),
         _ => Err(BytesError::Empty), // TODO: TMP Err("Bad class/data"),
       }
     }
@@ -227,8 +117,8 @@ fn parser() {
       7F 'ELF ; Magic
       01 ; ei_class
       02 ; ei_data
-      00 ; ei_version
-      00 ; ei_osabi
+      01 ; ei_version
+      03 ; ei_osabi
       00 ; ei_abiversion
       00 00 00 00 00 00 00 ; ei_pad
 

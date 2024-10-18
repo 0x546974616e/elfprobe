@@ -60,21 +60,28 @@ macro_rules! create_primitive {
 macro_rules! impl_primitive_method {
   ($struct: ident, $type: ident, $operation: ty) => {
     impl<Endianness: self::Endianness> From<$type> for $struct<Endianness> {
-      #[inline]
+      #[inline(always)]
       fn from(value: $type) -> Self {
         Self(<Endianness as $operation>::write(value), PhantomData)
       }
     }
 
+    impl<Endianness: self::Endianness> From<&$struct<Endianness>> for $type {
+      #[inline(always)]
+      fn from(value: &$struct<Endianness>) -> $type {
+        <Endianness as $operation>::read(value.0)
+      }
+    }
+
     impl<Endianness: self::Endianness> $struct<Endianness> {
-      #[inline]
       #[allow(unused)]
+      #[inline(always)]
       pub fn get(self) -> $type {
         <Endianness as $operation>::read(self.0)
       }
 
-      #[inline]
       #[allow(unused)]
+      #[inline(always)]
       pub fn set(&mut self, value: $type) {
         self.0 = <Endianness as $operation>::write(value);
       }

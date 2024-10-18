@@ -19,7 +19,7 @@ parser!(TupleStruct = Struct Identifier [GenericParams?] Parenthesis [WhereClaus
 parser!(OuterAttribute = Hash Bracket );
 
 // https://doc.rust-lang.org/reference/visibility-and-privacy.html
-parser!(Visibility = Pub [Parenthesis?]);
+parser!(Visibility = Pub[Parenthesis?]);
 
 // https://doc.rust-lang.org/reference/items/generics.html#generic-parameters
 parser!(GenericParams = Lt [(GenericParam [Comma?])*] Gt);
