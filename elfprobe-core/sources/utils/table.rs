@@ -99,7 +99,7 @@ impl<'formatter, 'buffer: 'formatter> DisplayTable<'formatter, 'buffer> for fmt:
 macro_rules! display_table {
   (
     $formatter: ident, $title: expr =>
-    $( [ $( $item: expr ),* ] ),* $(,)?
+    $( [ $( $item: expr ),* $(,)? ] ),* $(,)?
   ) => {
     {
       use $crate::utils::DisplayTable;

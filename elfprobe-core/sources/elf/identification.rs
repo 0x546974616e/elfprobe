@@ -2,49 +2,9 @@ use std::fmt;
 
 use elfprobe_macro::Pod;
 
-use crate::utils::{define_constants, display_table};
+use crate::utils::Magic;
 
-use super::magic::Magic;
 use super::types::ElfType;
-
-define_constants! {
-  ei_class(u8) "Object file classes",
-  ELFCLASS32 = 1 "32-bit objects",
-  ELFCLASS64 = 2 "64-bit objects",
-}
-
-define_constants! {
-  ei_data(u8) "Data encodings",
-  ELFDATANONE = 0 "Invalid data encoding",
-  ELFDATA2LSB = 1 "2's complement, little-endian",
-  ELFDATA2MSB = 2 "2's complement, big-endian",
-}
-
-define_constants! {
-  ei_version(u8) "Object file version.",
-  EV_NONE = 0 "Invalid version",
-  EV_CURRENT = 1 "Current version",
-}
-
-define_constants! {
-  ei_osabi(u8) "Operating System and ABI Identifiers",
-  // ELFOSABI_NONE = 0x0 "UNIX System V ABI",
-  ELFOSABI_SYSV = 0x0 "UNIX System V ABI",
-  ELFOSABI_HPUX = 0x1 "HP-UX",
-  ELFOSABI_NETBSD = 0x2 "NetBSD",
-  ELFOSABI_GNU = 0x3 "GNU/Linux",
-  // ELFOSABI_LINUX = 0x3 "GNU/Linux",
-  ELFOSABI_SOLARIS = 0x6 "Sun Solaris",
-  ELFOSABI_AIX = 0x7 "IBM AIX",
-  ELFOSABI_IRIX = 0x8 "SGI Irix",
-  ELFOSABI_FREEBSD = 0x9 "FreeBSD",
-  ELFOSABI_TRU64 = 0xa "Compaq TRU64 UNIX",
-  ELFOSABI_MODESTO = 0xb "Novell Modesto",
-  ELFOSABI_OPENBSD = 0xc "OpenBSD",
-  ELFOSABI_ARM_AEABI = 0x40 "ARM EABI",
-  ELFOSABI_ARM = 0x61 "ARM",
-  ELFOSABI_STANDALONE = 0xff "Standalone (embedded) application",
-}
 
 ///
 /// Identify the file as an ELF object file, and provide information about the
@@ -86,6 +46,17 @@ pub struct ElfIdentification<ElfType: self::ElfType> {
 
   /// Unused bytes. These bytes are reserved and set to zero.
   pub ei_pad: [ElfType::Uchar; 7],
+}
+
+impl<ElfType: self::ElfType> From<&ElfIdentification<ElfType>> for Magic {
+  fn from(identification: &ElfIdentification<ElfType>) -> Magic {
+    Magic::from([
+      identification.ei_mag0.into(),
+      identification.ei_mag1.into(),
+      identification.ei_mag2.into(),
+      identification.ei_mag3.into(),
+    ])
+  }
 }
 
 #[test]

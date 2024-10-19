@@ -74,34 +74,37 @@ impl<Type: fmt::Display + fmt::LowerHex> Constant<Type> {
 
 macro_rules! define_constants {
   (
-    $module:ident($type:ty) $description:literal,
+    $struct:ident($type:ty) $description:literal,
     $( $name1:ident = $value1:literal $meaning1:literal, )*
     $( [$name2:ident, $name3:ident] = [$value2:literal, $value3:literal] $meaning2:literal, )*
   ) => {
+    $(
+      #[allow(unused)]
+      #[doc = $meaning1]
+      pub const $name1: $type = $value1;
+    )*
+
+    $(
+      #[allow(unused)]
+      #[doc = $meaning2]
+      pub const $name2: $type = $value2;
+
+      #[allow(unused)]
+      #[doc = $meaning2]
+      pub const $name3: $type = $value3;
+    )*
+
     #[allow(unused)]
     #[doc = $description]
-    pub mod $module {
-      use $crate::utils::Constant;
+    pub struct $struct;
 
-      $(
-        #[allow(unused)]
-        #[doc = $meaning1]
-        pub const $name1: $type = $value1;
-      )*
-
-      $(
-        #[allow(unused)]
-        #[doc = $meaning2]
-        pub const $name2: $type = $value2;
-
-        #[allow(unused)]
-        #[doc = $meaning2]
-        pub const $name3: $type = $value3;
-      )*
+    impl $struct {
 
       #[allow(unused)]
       #[doc = concat!("Transforms an `", stringify!($type), "` into an [`", stringify!($module), "`][self] constant.")]
-      pub fn into_constant(value: impl Into<$type>) -> Constant<$type> {
+      pub fn from(value: impl Into<$type>) -> $crate::utils::Constant<$type> {
+        use $crate::utils::Constant;
+
         let value = value.into();
         match value {
           $( $value1 => Constant::named(stringify!($name1), value, Some($meaning1)), )*
@@ -126,7 +129,7 @@ mod tests {
   use super::*;
 
   define_constants! {
-    dada(usize) "Dada",
+    Dada(usize) "Dada",
 
     TR_DADA = 0 "Dada fafa",
     TR_FAFA = 1 "Fafa gaga",
@@ -140,7 +143,7 @@ mod tests {
   fn named_dada() {
     assert_eq!(
       Constant::<usize>::named("TR_DADA", 0, Some("Dada fafa")),
-      dada::into_constant(0_usize),
+      Dada::from(0_usize),
     );
   }
 
@@ -148,7 +151,7 @@ mod tests {
   fn named_fafa() {
     assert_eq!(
       Constant::<usize>::named("TR_FAFA", 1, Some("Fafa gaga")),
-      dada::into_constant(1_usize),
+      Dada::from(1_usize),
     );
   }
 
@@ -156,7 +159,7 @@ mod tests {
   fn named_gaga() {
     assert_eq!(
       Constant::<usize>::named("TR_GAGA", 101, Some("Gaga haha")),
-      dada::into_constant(dada::TR_GAGA),
+      Dada::from(TR_GAGA),
     );
   }
 
@@ -164,7 +167,7 @@ mod tests {
   fn named_lohaha() {
     assert_eq!(
       Constant::<usize>::named("TR_LOHAHA", 0xA0, Some("Haha jaja")),
-      dada::into_constant(0xA0_usize),
+      Dada::from(0xA0_usize),
     );
   }
 
@@ -172,7 +175,7 @@ mod tests {
   fn named_hijaja() {
     assert_eq!(
       Constant::<usize>::named("TR_HIJAJA", 0xBC, Some("Jaja kaka")),
-      dada::into_constant(0xBC_usize),
+      Dada::from(0xBC_usize),
     );
   }
 
@@ -180,7 +183,7 @@ mod tests {
   fn unknown_haha() {
     assert_eq!(
       Constant::<usize>::unknown(0xA5, Some("Haha jaja")),
-      dada::into_constant(0xA5_usize),
+      Dada::from(0xA5_usize),
     );
   }
 
@@ -188,15 +191,12 @@ mod tests {
   fn unknonw_jaja() {
     assert_eq!(
       Constant::<usize>::unknown(0xBB, Some("Jaja kaka")),
-      dada::into_constant(0xBB_usize),
+      Dada::from(0xBB_usize),
     );
   }
 
   #[test]
   fn unknown() {
-    assert_eq!(
-      Constant::<usize>::unknown(0x3, None),
-      dada::into_constant(0x3_usize),
-    );
+    assert_eq!(Constant::<usize>::unknown(0x3, None), Dada::from(0x3_usize),);
   }
 }

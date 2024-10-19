@@ -1,11 +1,11 @@
 #![allow(non_camel_case_types)] // TODO: Temporary?
 #![allow(unused)] // TODO: Temporary
 
-pub mod aliases;
-pub mod header;
-pub mod identification;
-pub mod magic;
-pub mod types;
+mod aliases;
+mod constants;
+mod header;
+mod identification;
+mod types;
 
 use header::ElfHeader;
 use identification::ElfIdentification;
@@ -59,8 +59,9 @@ where
   ElfType: self::ElfType,
 {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    eprintln!("{:#}", self.header);
-    f.debug_struct("_ElfFile").field("header", &self.header).finish()
+    write!(f, "{:#}", self.header)
+    // eprintln!("{:#}", self.header);
+    // f.debug_struct("_ElfFile").field("header", &self.header).finish()
   }
 }
 

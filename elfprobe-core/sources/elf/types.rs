@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use std::fmt::Display;
+use std::fmt::LowerHex;
 use std::marker::PhantomData;
 
 use elfprobe_macro::Pod;
@@ -36,7 +37,7 @@ macro_rules! make_elftype {
   };
 }
 
-make_elftype!(Pod, Display, Debug, Default);
+make_elftype!(Pod, Display, Debug, LowerHex, Default);
 
 #[derive(Debug, Default, Copy, Clone, Pod)]
 pub struct ElfType32<E: self::Endianness>(PhantomData<E>);

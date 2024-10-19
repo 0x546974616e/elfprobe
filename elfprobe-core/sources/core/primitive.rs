@@ -76,9 +76,15 @@ macro_rules! impl_primitive_method {
     impl<Endianness: self::Endianness> From<$struct<Endianness>> for $into {
       #[inline(always)]
       fn from(value: $struct<Endianness>) -> $into {
-        <Endianness as $operation>::read(value.0).try_into().expect(
-          concat!("Cannot convert an ", stringify!($struct), " into an `", stringify!($into), "`.")
-        )
+        <Endianness as $operation>::read(value.0)
+          .try_into()
+          .expect(concat!(
+            "Cannot convert an ",
+            stringify!($struct),
+            " into an `",
+            stringify!($into),
+            "`."
+          ))
       }
     }
 
