@@ -40,7 +40,7 @@ use elfprobe_macro::Pod;
 use crate::core::Reader;
 
 #[cfg(any(test, doc, clippy))]
-use crate::utils::hex;
+use crate::utils::parse_hex;
 
 // #[derive(Debug)]
 pub struct ElfObject<'data, Reader, ElfType>
@@ -59,7 +59,7 @@ where
   ElfType: self::ElfType,
 {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    eprintln!("{:#}", self.header.e_ident);
+    eprintln!("{:#}", self.header);
     f.debug_struct("_ElfFile").field("header", &self.header).finish()
   }
 }
@@ -112,18 +112,18 @@ where
 
 #[test]
 fn parser() {
-  let bytes = hex(
+  let bytes = parse_hex(
     r"
       7F 'ELF ; Magic
       01 ; ei_class
       02 ; ei_data
-      01 ; ei_version
+      02 ; ei_version
       03 ; ei_osabi
       00 ; ei_abiversion
       00 00 00 00 00 00 00 ; ei_pad
 
-      0102 ; e_type
-      0102 ; e_machine
+      0003 ; e_type
+      003e ; e_machine
       0102 0304 ; e_version
       0102 0304 ; e_entry
       0102 0304 ; e_phoff

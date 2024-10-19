@@ -2,7 +2,7 @@ use std::fmt;
 
 use elfprobe_macro::Pod;
 
-use crate::utils::define_constants;
+use crate::utils::{define_constants, display_table};
 
 use super::magic::Magic;
 use super::types::ElfType;
@@ -15,6 +15,7 @@ define_constants! {
 
 define_constants! {
   ei_data(u8) "Data encodings",
+  ELFDATANONE = 0 "Invalid data encoding",
   ELFDATA2LSB = 1 "2's complement, little-endian",
   ELFDATA2MSB = 2 "2's complement, big-endian",
 }
@@ -26,7 +27,7 @@ define_constants! {
 }
 
 define_constants! {
-  ei_osabi(u8) "dada",
+  ei_osabi(u8) "Operating System and ABI Identifiers",
   // ELFOSABI_NONE = 0x0 "UNIX System V ABI",
   ELFOSABI_SYSV = 0x0 "UNIX System V ABI",
   ELFOSABI_HPUX = 0x1 "HP-UX",
@@ -51,7 +52,7 @@ define_constants! {
 /// that have defined meanings are detailed below. The remaining bytes are
 /// reserved for future use, and should be set to zero.
 ///
-/// See [ELF-64 Object File Format](https://uclibc.org/docs/elf-64-gen.pdf)
+/// See [ELF-64 Object File Format](https://uclibc.org/docs/elf-64-gen.pdf).
 ///
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, Pod)]
@@ -85,20 +86,6 @@ pub struct ElfIdentification<ElfType: self::ElfType> {
 
   /// Unused bytes. These bytes are reserved and set to zero.
   pub ei_pad: [ElfType::Uchar; 7],
-}
-
-impl<ElfType: self::ElfType> fmt::Display for ElfIdentification<ElfType> {
-  fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-    formatter
-      .debug_struct("ElfIdentification")
-      .field("Magic", &Magic::from(self))
-      .field("Class", &ei_class::into_constant(self.ei_class))
-      .field("Data", &ei_data::into_constant(self.ei_data))
-      .field("Version", &ei_version::into_constant(self.ei_version))
-      .field("OS/ABI", &ei_osabi::into_constant(self.ei_osabi))
-      .field("ABI Version", &self.ei_abiversion)
-      .finish()
-  }
 }
 
 #[test]

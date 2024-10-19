@@ -12,31 +12,31 @@ use super::aliases::{Elf32, Elf64};
 // Trait aliases are still experimental (`trait Bounds = ...`).
 macro_rules! make_elftype {
   ($($bounds: tt),+) => {
-    pub trait ElfType: $($bounds+)+ {
+    pub trait ElfType: Pod + Debug {
       type Endian: self::Endianness;
 
       /// Unsigned program address.
-      type Addr: $($bounds+)+;
+      type Addr: $($bounds+)+ Into<usize>;
 
       /// Unsigned file offset.
-      type Off: $($bounds+)+;
+      type Off: $($bounds+)+ Into<usize>;
 
       /// Unsigned tiny integer.
       type Uchar: $($bounds+)+ Into<u8>;
 
       /// Unsigned small integer.
-      type Half: $($bounds+)+;
+      type Half: $($bounds+)+ Into<u16>;
 
       /// Unsigned medium integer.
-      type Word: $($bounds+)+;
+      type Word: $($bounds+)+ Into<u32>;
 
       /// Signed medium integer.
-      type Sword: $($bounds+)+;
+      type Sword: $($bounds+)+ Into<i32>;
     }
   };
 }
 
-make_elftype!(Pod, Debug, Default);
+make_elftype!(Pod, Display, Debug, Default);
 
 #[derive(Debug, Default, Copy, Clone, Pod)]
 pub struct ElfType32<E: self::Endianness>(PhantomData<E>);

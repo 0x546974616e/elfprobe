@@ -22,9 +22,29 @@ impl<Type> Constant<Type> {
   pub fn unknown(value: Type, meaning: Option<&'static str>) -> Self {
     Self::new(None, value, meaning)
   }
+
+  #[inline(always)]
+  pub fn name(&self) -> &'static str {
+    self.name.unwrap_or("Unknown")
+  }
+
+  #[inline(always)]
+  pub fn meaning(&self) -> &'static str {
+    self.meaning.unwrap_or("") // "??"
+  }
 }
 
-impl<Type: fmt::Display + fmt::LowerHex> fmt::Debug for Constant<Type> {
+impl<Type: fmt::Debug + fmt::LowerHex> fmt::Debug for Constant<Type> {
+  fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    formatter
+      .debug_tuple(self.name())
+      .field(&self.value)
+      .field(&self.meaning())
+      .finish()
+  }
+}
+
+impl<Type: fmt::Display + fmt::LowerHex> fmt::Display for Constant<Type> {
   fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     if formatter.alternate() {
       if let Some(meaning) = self.meaning {
@@ -37,9 +57,18 @@ impl<Type: fmt::Display + fmt::LowerHex> fmt::Debug for Constant<Type> {
 
     match self.name {
       Some(name) => formatter.write_str(name),
-      None => formatter.write_fmt(format_args!("{:#x}", self.value)),
+      // None => formatter.write_fmt(format_args!("{:#x}", self.value)),
+      None => formatter.write_fmt(format_args!("Unknown ({:#x})", self.value)),
       // None => fmt::LowerHex::fmt(&self.value, formatter),
     }
+  }
+}
+
+impl<Type: fmt::Display + fmt::LowerHex> Constant<Type> {
+  #[allow(unused)]
+  #[inline(always)]
+  pub fn name_or_value(&self) -> String {
+    self.to_string()
   }
 }
 
@@ -49,8 +78,9 @@ macro_rules! define_constants {
     $( $name1:ident = $value1:literal $meaning1:literal, )*
     $( [$name2:ident, $name3:ident] = [$value2:literal, $value3:literal] $meaning2:literal, )*
   ) => {
+    #[allow(unused)]
     #[doc = $description]
-    mod $module {
+    pub mod $module {
       use $crate::utils::Constant;
 
       $(
@@ -70,6 +100,7 @@ macro_rules! define_constants {
       )*
 
       #[allow(unused)]
+      #[doc = concat!("Transforms an `", stringify!($type), "` into an [`", stringify!($module), "`][self] constant.")]
       pub fn into_constant(value: impl Into<$type>) -> Constant<$type> {
         let value = value.into();
         match value {

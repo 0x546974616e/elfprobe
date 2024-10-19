@@ -9,7 +9,7 @@ use std::fmt::Debug;
 /// implemented endianness and the target processor's endianness.
 ///
 /// The [`'static`][static], [`Copy`] and [`Sized`] trait bounds are here to
-/// enforce primitive types (`u8`, `i32`, `u64`...), see [`Pod`](crate::pod::Pod)
+/// enforce primitive types (`u8`, `i32`, `u64`...), see [`Pod`](crate::core::Pod)
 /// trait note for more details.
 ///
 /// The initial idea was to use [`std::concat_idents`] to craft method names

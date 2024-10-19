@@ -1,8 +1,11 @@
+use std::fmt;
+
 use elfprobe_macro::Pod;
 
-use crate::utils::define_constants;
+use crate::utils::{define_constants, display_table};
 
 use super::identification::ElfIdentification;
+use super::magic::Magic;
 use super::types::ElfType;
 
 define_constants! {
@@ -12,7 +15,7 @@ define_constants! {
 }
 
 define_constants! {
-  e_type(usize) "Object file types",
+  e_type(u16) "Object file types",
   ET_NONE = 0 "No file type",
   ET_REL = 1 "Relocatable object file",
   ET_EXEC = 2 "Executable file",
@@ -22,8 +25,15 @@ define_constants! {
   [ ET_LOPROC, ET_HIPROC ] = [ 0xFF00, 0xFFFF ] "Processor-specific use",
 }
 
+///
+/// Constants retrieved from:
+/// - `/usr/include{/linux,}/elf.h`
+/// - <https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf-em.h\n">
+/// - <https://refspecs.linuxfoundation.org/elf/gabi4+/ch4.eheader.html\n">
+/// - <https://en.wikipedia.org/wiki/Executable_and_Linkable_Format\n">
+///
 define_constants! {
-  e_machine(usize) "dada",
+  e_machine(u16) "ELF target machines",
   EM_NONE = 0x0 "No machine",
   EM_M32 = 0x1 "AT&T WE 32100",
   EM_SPARC = 0x2 "SUN SPARC",
@@ -240,4 +250,23 @@ pub struct ElfHeader<ElfType: self::ElfType> {
   pub e_shnum: ElfType::Half,
 
   pub e_shstrndx: ElfType::Half,
+}
+
+impl<ElfType: self::ElfType> fmt::Display for ElfHeader<ElfType> {
+  fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    use super::identification::{ei_class, ei_data, ei_osabi, ei_version};
+
+    display_table!(
+      formatter, "ELF Header" =>
+      [ "Magic:", Magic::from(&self.e_ident) ],
+      [ "Class:", ei_class::into_constant(self.e_ident.ei_class) ],
+      [ "Data:", ei_data::into_constant(self.e_ident.ei_data) ],
+      [ "Version:", ei_version::into_constant(self.e_ident.ei_version) ],
+      [ "OS/ABI:", ei_osabi::into_constant(self.e_ident.ei_osabi) ],
+      [ "ABI Version:", self.e_ident.ei_abiversion ],
+      [ "Type:", e_type::into_constant(self.e_type) ],
+      [ "Machine:", e_machine::into_constant(self.e_machine) ],
+      [ "Version:", self.e_version ],
+    )
+  }
 }

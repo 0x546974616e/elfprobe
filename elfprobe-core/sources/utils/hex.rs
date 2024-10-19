@@ -16,9 +16,6 @@ fn to_capitalized(string: &str) -> String {
 // ║╣ ├┬┘├┬┘│ │├┬┘
 // ╚═╝┴└─┴└─└─┘┴└─
 
-// TODO:
-// Rewrite ChunkError and ParseHexError.
-
 // NOTE:
 // Wrapping errors has been deliberately chosen instead boxing them (Box<dyn>)
 // in order to try out other ways of playing with errors in Rust. It may
@@ -180,7 +177,7 @@ fn find_words(string: &str) -> impl Iterator<Item = &str> {
 /// ```
 ///
 #[allow(unused)]
-pub fn hex(string: &str) -> Result<Vec<u8>, HexError> {
+pub fn parse_hex(string: &str) -> Result<Vec<u8>, HexError> {
   // I find this function still amateurish in its use of Rust,
   // how to improve it? Is it necessary? (readability first)
   let mut buffer: Vec<u8> = Vec::new();
@@ -235,7 +232,7 @@ mod tests {
     ($name: ident, $string: literal, $($bytes: literal),+ $(,)?) => {
       #[test]
       fn $name() {
-        assert_eq!(hex($string).unwrap(), vec![$($bytes),+])
+        assert_eq!(parse_hex($string).unwrap(), vec![$($bytes),+])
       }
     };
   }
@@ -245,7 +242,7 @@ mod tests {
       #[test]
       fn $name() {
         // Extract error to string because ParseIntError is not buildable.
-        assert_eq!(hex($string).unwrap_err().to_string(), $error);
+        assert_eq!(parse_hex($string).unwrap_err().to_string(), $error);
       }
     };
   }

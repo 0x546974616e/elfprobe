@@ -1,9 +1,14 @@
 mod constant;
-pub(crate) use constant::define_constants;
-pub use constant::Constant;
-
 mod file;
-pub use file::MappedFile;
-
 mod hex;
-pub use hex::*; // TODO
+mod table;
+
+#[cfg(any(test, doc, clippy))]
+pub use hex::parse_hex;
+
+pub(crate) use constant::define_constants;
+pub(crate) use table::display_table;
+
+pub use constant::Constant;
+pub use file::MappedFile;
+pub use table::DisplayTable;

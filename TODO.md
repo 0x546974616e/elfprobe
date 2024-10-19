@@ -5,7 +5,6 @@
 
 - [ ] Make `elfprobe-core` a library and `elfprobe-cli` a binary.
 - [ ] Rewrite `BytesError` as `ElfError`.
-- [ ] Rewrite `ParseHexError` and `parse_hex()`.
 - [X] Rewrite `ChunkError` and `ParseHexError`.
 - [X] `#[derive(Pod)]`.
 - [X] Make Rust workspace.

@@ -12,7 +12,7 @@ use elfprobe_macro::Pod;
 // ╚═╝ ┴ ┴└─└─┘└─┘ ┴
 
 macro_rules! create_primitive {
-  ($struct: ident, $alias: ident, $type: ident, $inner: ty, $operation: ty) => {
+  ($struct: ident, $alias: ident, $type: ident, $inner: ty, $into: ty, $operation: ty) => {
     #[doc = concat!("An `", stringify!($inner), "` wrapper with runtime endianness.")]
     ///
     /// It's important that this structure is a zero-cost abstraction of its
@@ -48,7 +48,7 @@ macro_rules! create_primitive {
     #[allow(unused)]
     pub type $alias<Endianness> = $struct<Endianness>;
 
-    impl_primitive_method!($struct, $type, $operation);
+    impl_primitive_method!($struct, $type, $into, $operation);
     impl_primitive_format!($struct);
   };
 }
@@ -58,7 +58,7 @@ macro_rules! create_primitive {
 // ╩ ╩└─┘ ┴ ┴ ┴└─┘╶┴┘└─┘
 
 macro_rules! impl_primitive_method {
-  ($struct: ident, $type: ident, $operation: ty) => {
+  ($struct: ident, $type: ident, $into: ty, $operation: ty) => {
     impl<Endianness: self::Endianness> From<$type> for $struct<Endianness> {
       #[inline(always)]
       fn from(value: $type) -> Self {
@@ -66,10 +66,19 @@ macro_rules! impl_primitive_method {
       }
     }
 
-    impl<Endianness: self::Endianness> From<&$struct<Endianness>> for $type {
+    impl<Endianness: self::Endianness> From<$struct<Endianness>> for $type {
       #[inline(always)]
-      fn from(value: &$struct<Endianness>) -> $type {
+      fn from(value: $struct<Endianness>) -> $type {
         <Endianness as $operation>::read(value.0)
+      }
+    }
+
+    impl<Endianness: self::Endianness> From<$struct<Endianness>> for $into {
+      #[inline(always)]
+      fn from(value: $struct<Endianness>) -> $into {
+        <Endianness as $operation>::read(value.0).try_into().expect(
+          concat!("Cannot convert an ", stringify!($struct), " into an `", stringify!($into), "`.")
+        )
       }
     }
 
@@ -143,12 +152,12 @@ macro_rules! impl_primitive_format {
 mod aligned {
   use super::{super::endian::AlignedEndianOperation, *};
 
-  create_primitive!(AlignedI16, I16, i16, i16, AlignedEndianOperation<i16>);
-  create_primitive!(AlignedU16, U16, u16, u16, AlignedEndianOperation<u16>);
-  create_primitive!(AlignedI32, I32, i32, i32, AlignedEndianOperation<i32>);
-  create_primitive!(AlignedU32, U32, u32, u32, AlignedEndianOperation<u32>);
-  create_primitive!(AlignedI64, I64, i64, i64, AlignedEndianOperation<i64>);
-  create_primitive!(AlignedU64, U64, u64, u64, AlignedEndianOperation<u64>);
+  create_primitive!(AlignedI16, I16, i16, i16, isize, AlignedEndianOperation<i16>);
+  create_primitive!(AlignedU16, U16, u16, u16, usize, AlignedEndianOperation<u16>);
+  create_primitive!(AlignedI32, I32, i32, i32, isize, AlignedEndianOperation<i32>);
+  create_primitive!(AlignedU32, U32, u32, u32, usize, AlignedEndianOperation<u32>);
+  create_primitive!(AlignedI64, I64, i64, i64, isize, AlignedEndianOperation<i64>);
+  create_primitive!(AlignedU64, U64, u64, u64, usize, AlignedEndianOperation<u64>);
 }
 
 // #[doc(cfg(feature = "unaligned")]
@@ -156,12 +165,12 @@ mod aligned {
 mod unaligned {
   use super::{super::endian::UnalignedEndianOperation, *};
 
-  create_primitive!(UnalignedI16, I16, i16, [u8; 2], UnalignedEndianOperation<i16, 2>);
-  create_primitive!(UnalignedU16, U16, u16, [u8; 2], UnalignedEndianOperation<u16, 2>);
-  create_primitive!(UnalignedI32, I32, i32, [u8; 4], UnalignedEndianOperation<i32, 4>);
-  create_primitive!(UnalignedU32, U32, u32, [u8; 4], UnalignedEndianOperation<u32, 4>);
-  create_primitive!(UnalignedI64, I64, i64, [u8; 8], UnalignedEndianOperation<i64, 8>);
-  create_primitive!(UnalignedU64, U64, u64, [u8; 8], UnalignedEndianOperation<u64, 8>);
+  create_primitive!(UnalignedI16, I16, i16, [u8; 2], isize, UnalignedEndianOperation<i16, 2>);
+  create_primitive!(UnalignedU16, U16, u16, [u8; 2], usize, UnalignedEndianOperation<u16, 2>);
+  create_primitive!(UnalignedI32, I32, i32, [u8; 4], isize, UnalignedEndianOperation<i32, 4>);
+  create_primitive!(UnalignedU32, U32, u32, [u8; 4], usize, UnalignedEndianOperation<u32, 4>);
+  create_primitive!(UnalignedI64, I64, i64, [u8; 8], isize, UnalignedEndianOperation<i64, 8>);
+  create_primitive!(UnalignedU64, U64, u64, [u8; 8], usize, UnalignedEndianOperation<u64, 8>);
 }
 
 // ╦ ╦┌─┐┌─┐
