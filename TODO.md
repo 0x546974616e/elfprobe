@@ -10,6 +10,7 @@
 - [X] Make Rust workspace.
 - [X] Remove `syn` and `quote`.
 - [ ] `std::concat_idents!()`
+- [ ] `define_constants!()` hex or bin display.
 
 ## elfprobe-macro
 

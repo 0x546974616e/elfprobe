@@ -7,8 +7,66 @@ use elfprobe_macro::Pod;
 
 use crate::core::Endianness;
 use crate::core::Pod;
+use crate::core::{I16, I32, I64, U16, U32, U64};
 
-use super::aliases::{Elf32, Elf64};
+/// 32-bit ELF base types.
+/// See `/usr/include{/linux,}/elf.h`
+#[allow(non_snake_case)]
+pub mod Elf32 {
+  use super::*;
+
+  /// Unsigned program address.
+  pub type Addr<E> = U32<E>;
+
+  /// Unsigned file offset.
+  pub type Off<E> = U32<E>;
+
+  /// Unsigned tiny integer
+  pub type Uchar = u8;
+
+  /// Unsigned small integer.
+  pub type Half<E> = U16<E>;
+
+  /// Unsigned medium integer.
+  pub type Word<E> = U32<E>;
+
+  /// Signed medium integer.
+  pub type Sword<E> = I32<E>;
+}
+
+/// 64-bit ELF base types.
+/// See `/usr/include{/linux,}/elf.h`
+#[allow(non_snake_case)]
+pub mod Elf64 {
+  use super::*;
+
+  /// Unsigned program address.
+  pub type Addr<E> = U64<E>;
+
+  /// Unsigned file offset.
+  pub type Off<E> = U64<E>;
+
+  /// Unsigned tiny byte.
+  pub type Uchar = u8;
+
+  /// Unsigned small integer.
+  pub type Half<E> = U16<E>;
+
+  /// Signed small integer.
+  pub type SHalf<E> = I16<E>;
+
+  /// Unsigned medium integer.
+  pub type Word<E> = U32<E>;
+
+  /// Signed medium integer.
+  pub type SWord<E> = I32<E>;
+
+  /// Unsigned large integer.
+  pub type XWord<E> = U64<E>;
+
+  /// Signed large integer.
+  pub type SXWord<E> = I64<E>;
+}
 
 // Trait aliases are still experimental (`trait Bounds = ...`).
 macro_rules! make_elftype {
@@ -23,16 +81,19 @@ macro_rules! make_elftype {
       type Off: $($bounds+)+ Into<usize>;
 
       /// Unsigned tiny integer.
-      type Uchar: $($bounds+)+ Into<u8>;
+      type Uchar: $($bounds+)+ Into<usize> + Into<u8>;
 
       /// Unsigned small integer.
-      type Half: $($bounds+)+ Into<u16>;
+      type Half: $($bounds+)+ Into<usize> + Into<u16>;
 
       /// Unsigned medium integer.
-      type Word: $($bounds+)+ Into<u32>;
+      type Word: $($bounds+)+ Into<usize> + Into<u32>;
 
       /// Signed medium integer.
-      type Sword: $($bounds+)+ Into<i32>;
+      type Sword: $($bounds+)+ Into<isize> + Into<i32>;
+
+      /// Unsigned large integer.
+      type Xword: $($bounds+)+ Into<usize> + Into<usize>;
     }
   };
 }
@@ -61,6 +122,9 @@ impl<E: self::Endianness> ElfType for ElfType32<E> {
 
   /// Signed medium integer.
   type Sword = Elf32::Sword<E>;
+
+  /// Unsigned large integer.
+  type Xword = Elf32::Word<E>;
 }
 
 #[derive(Debug, Default, Copy, Clone, Pod)]
@@ -84,5 +148,8 @@ impl<E: self::Endianness> ElfType for ElfType64<E> {
   type Word = Elf64::Word<E>;
 
   /// Signed medium integer.
-  type Sword = Elf64::Sword<E>;
+  type Sword = Elf64::SWord<E>;
+
+  /// Unsigned large integer.
+  type Xword = Elf64::XWord<E>;
 }

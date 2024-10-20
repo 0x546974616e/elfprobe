@@ -110,7 +110,14 @@ macro_rules! display_table {
   };
 }
 
+macro_rules! display_row {
+  ( $table: ident, [ $( $item: expr ),* $(,)? ] ) => {
+    $table.row( &[ $( &$item ),* ] )
+  };
+}
+
 pub(crate) use display_table;
+pub(crate) use display_row;
 
 #[cfg(test)]
 mod tests {

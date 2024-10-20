@@ -72,6 +72,11 @@ pub trait Reader<'data>: Copy + Clone {
       Some(bytes) => Type::from_bytes(bytes),
     }
   }
+
+  #[allow(unused)]
+  fn read_slice<Type: Pod>(self, offset: usize, count: usize) -> Result<&'data [Type], BytesError> {
+    todo!()
+  }
 }
 
 ///

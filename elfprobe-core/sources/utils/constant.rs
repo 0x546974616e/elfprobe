@@ -45,7 +45,7 @@ impl<Type: fmt::Debug + fmt::LowerHex> fmt::Debug for Constant<Type> {
 }
 
 impl<Type: fmt::Display + fmt::LowerHex> fmt::Display for Constant<Type> {
-  fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+  fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
     if formatter.alternate() {
       if let Some(meaning) = self.meaning {
         return match self.name {
@@ -79,18 +79,18 @@ macro_rules! define_constants {
     $( [$name2:ident, $name3:ident] = [$value2:literal, $value3:literal] $meaning2:literal, )*
   ) => {
     $(
-      #[allow(unused)]
       #[doc = $meaning1]
+      #[allow(unused, non_upper_case_globals)]
       pub const $name1: $type = $value1;
     )*
 
     $(
-      #[allow(unused)]
       #[doc = $meaning2]
+      #[allow(unused, non_upper_case_globals)]
       pub const $name2: $type = $value2;
 
-      #[allow(unused)]
       #[doc = $meaning2]
+      #[allow(unused, non_upper_case_globals)]
       pub const $name3: $type = $value3;
     )*
 
@@ -101,7 +101,7 @@ macro_rules! define_constants {
     impl $struct {
 
       #[allow(unused)]
-      #[doc = concat!("Transforms an `", stringify!($type), "` into an [`", stringify!($module), "`][self] constant.")]
+      #[doc = concat!("Transforms an `", stringify!($type), "` into an [`", stringify!($struct), "`] constant.")]
       pub fn from(value: impl Into<$type>) -> $crate::utils::Constant<$type> {
         use $crate::utils::Constant;
 

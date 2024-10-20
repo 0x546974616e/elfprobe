@@ -2,9 +2,9 @@ use std::fmt;
 
 use elfprobe_macro::Pod;
 
-use crate::utils::{display_table, Magic, Hex, Bytes, FileOffset};
+use crate::utils::{display_table, Bytes, FileOffset, Hex, Magic};
 
-use super::constants::{EMachine, EType, EiClass, EiData, EiOsabi, EiVersion};
+use super::abi::{EMachine, EType, EiClass, EiData, EiOsabi, EiVersion};
 use super::identification::ElfIdentification;
 use super::types::ElfType;
 
@@ -15,13 +15,13 @@ pub struct ElfHeader<ElfType: self::ElfType> {
   /// about the data representation of the object file structures.
   pub e_ident: ElfIdentification<ElfType>,
 
-  /// Identifies the [object file type][e_type].
+  /// Identifies the [object file type][super::abi::EType].
   pub e_type: ElfType::Half,
 
-  /// Identifies the [target architecture][e_machine].
+  /// Identifies the [target architecture][super::abi::EMachine].
   pub e_machine: ElfType::Half,
 
-  /// Identifies the [version][e_version] of the object file format
+  /// Identifies the [version][super::abi::EiVersion] of the object file format
   pub e_version: ElfType::Word,
 
   /// Contains the virtual address of the program entry point.
@@ -79,5 +79,34 @@ impl<ElfType: self::ElfType> fmt::Display for ElfHeader<ElfType> {
       [ "Number of section headers:", self.e_shnum ],
       [ "Section header string table index:", self.e_shstrndx ],
     )
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use std::mem::size_of;
+
+  use super::ElfHeader;
+  use crate::core::{BigEndian, LittleEndian};
+  use crate::elf::{ElfType32, ElfType64};
+
+  #[test]
+  fn size_of_be_32() {
+    assert_eq!(size_of::<ElfHeader<ElfType32<BigEndian>>>(), 52);
+  }
+
+  #[test]
+  fn size_of_be_64() {
+    assert_eq!(size_of::<ElfHeader<ElfType64<BigEndian>>>(), 64);
+  }
+
+  #[test]
+  fn size_of_le_32() {
+    assert_eq!(size_of::<ElfHeader<ElfType32<LittleEndian>>>(), 52);
+  }
+
+  #[test]
+  fn size_of_le_64() {
+    assert_eq!(size_of::<ElfHeader<ElfType64<LittleEndian>>>(), 64);
   }
 }

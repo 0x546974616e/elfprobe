@@ -1,11 +1,11 @@
 #![allow(non_camel_case_types)] // TODO: Temporary?
 #![allow(unused)] // TODO: Temporary
 
-mod aliases;
-mod constants;
-mod header;
-mod identification;
-mod types;
+pub mod abi;
+pub mod header;
+pub mod identification;
+pub mod sections;
+pub mod types;
 
 use header::ElfHeader;
 use identification::ElfIdentification;
@@ -24,14 +24,6 @@ use crate::core::Pod;
 use crate::core::{BigEndian, Endianness, LittleEndian};
 use crate::core::{I16, I32, I64, U16, U32, U64};
 use elfprobe_macro::Pod;
-
-// ╔═╗┬  ┬┌─┐┌─┐┌─┐┌─┐
-// ╠═╣│  │├─┤└─┐├┤ └─┐
-// ╩ ╩┴─┘┴┴ ┴└─┘└─┘└─┘
-
-// ╔═╗┌┬┐┬─┐┬ ┬┌─┐┌┬┐
-// ╚═╗ │ ├┬┘│ ││   │
-// ╚═╝ ┴ ┴└─└─┘└─┘ ┴
 
 // ╔═╗┬┬  ┌─┐
 // ╠╣ ││  ├┤
@@ -60,6 +52,7 @@ where
 {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(f, "{:#}", self.header)
+    // write!(f, "{}", self.header)
     // eprintln!("{:#}", self.header);
     // f.debug_struct("_ElfFile").field("header", &self.header).finish()
   }

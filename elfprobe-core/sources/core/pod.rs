@@ -93,6 +93,19 @@ pub trait Pod: 'static + Copy + Sized {
 
     Ok(unsafe { &*pointer.cast::<Self>() })
   }
+
+  fn slice_from_bytes<'data>(bytes: &'data [u8], count: usize) -> Result<&'data [Self], BytesError> {
+    todo!()
+
+        // let size = count
+        //   .checked_mul(mem::size_of::<T>())
+        //   .ok_or(())?
+        //   .try_into()
+        //   .map_err(|_| ())?;
+        // let bytes = self.read_bytes(offset, size)?;
+        // let (t, _) = slice_from_bytes(bytes, count)?;
+        // Ok(t)
+  }
 }
 
 #[allow(unused_macros)]

@@ -1,13 +1,15 @@
-use crate::utils::define_constants;
+use crate::utils::{define_constants, define_flags};
 
 define_constants! {
   EiClass(u8) "Object file classes",
+
   ELFCLASS32 = 1 "32-bit objects",
   ELFCLASS64 = 2 "64-bit objects",
 }
 
 define_constants! {
   EiData(u8) "Data encodings",
+
   ELFDATANONE = 0 "Invalid data encoding",
   ELFDATA2LSB = 1 "2's complement, little-endian",
   ELFDATA2MSB = 2 "2's complement, big-endian",
@@ -15,12 +17,14 @@ define_constants! {
 
 define_constants! {
   EiVersion(u8) "Object file version.",
+
   EV_NONE = 0 "Invalid version",
   EV_CURRENT = 1 "Current version",
 }
 
 define_constants! {
   EiOsabi(u8) "Operating System and ABI Identifiers",
+
   // ELFOSABI_NONE = 0x0 "UNIX System V ABI",
   ELFOSABI_SYSV = 0x0 "UNIX System V ABI",
   ELFOSABI_HPUX = 0x1 "HP-UX",
@@ -41,11 +45,13 @@ define_constants! {
 
 define_constants! {
   EType(u16) "Object file types",
+
   ET_NONE = 0 "No file type",
   ET_REL = 1 "Relocatable object file",
   ET_EXEC = 2 "Executable file",
   ET_DYN = 3 "Shared object file",
   ET_CORE = 4 "Core file",
+
   [ ET_LOOS, ET_HIOS ] = [ 0xFE00, 0xFEFF ] "Environment-specific use",
   [ ET_LOPROC, ET_HIPROC ] = [ 0xFF00, 0xFFFF ] "Processor-specific use",
 }
@@ -59,6 +65,7 @@ define_constants! {
 ///
 define_constants! {
   EMachine(u16) "ELF target machines",
+
   EM_NONE = 0x0 "No machine",
   EM_M32 = 0x1 "AT&T WE 32100",
   EM_SPARC = 0x2 "SUN SPARC",
@@ -238,4 +245,65 @@ define_constants! {
   EM_RISCV = 0xF3 "RISC-V",
   EM_BPF = 0xF7 "Linux BPF -- in-kernel virtual machine",
   EM_CSKY = 0xFC "C-SKY",
+}
+
+
+define_constants!{
+  SHType(u32) "Section header types",
+
+  SHT_NULL = 0 "Section header table entry unused",
+  SHT_PROGBITS = 1 "Program data",
+  SHT_SYMTAB = 2 "Symbol table",
+  SHT_STRTAB = 3 "String table",
+  SHT_RELA = 4 "Relocation entries with addends",
+  SHT_HASH = 5 "Symbol hash table",
+  SHT_DYNAMIC = 6 "Dynamic linking information",
+  SHT_NOTE = 7 "Notes",
+  SHT_NOBITS = 8 "Program space with no data (bss)",
+  SHT_REL = 9 "Relocation entries, no addends",
+  SHT_SHLIB = 10 "Reserved",
+  SHT_DYNSYM = 11 "Dynamic linker symbol table",
+  SHT_INIT_ARRAY = 14 "Array of constructors",
+  SHT_FINI_ARRAY = 15 "Array of destructors",
+  SHT_PREINIT_ARRAY = 16 "Array of pre-constructors",
+  SHT_GROUP = 17 "Section group",
+  SHT_SYMTAB_SHNDX = 18 "Extended section indices",
+  SHT_RELR = 19 "RELR relative relocations",
+  SHT_NUM = 20 "Number of defined types.",
+
+  SHT_GNU_ATTRIBUTES = 0x6ffffff5 "Object attributes. ",
+  SHT_GNU_HASH = 0x6ffffff6 "GNU-style hash table. ",
+  SHT_GNU_LIBLIST = 0x6ffffff7 "Prelink library list",
+  SHT_CHECKSUM = 0x6ffffff8 "Checksum for DSO content. ",
+  SHT_GNU_verdef = 0x6ffffffd "Version definition section. ",
+  SHT_GNU_verneed = 0x6ffffffe "Version needs section. ",
+  SHT_GNU_versym = 0x6fffffff "Version symbol table. ",
+
+  [ SHT_LOOS, SHT_HIOS ] = [ 0x60000000, 0x6fffffff ] "OS-specific type",
+  [ SHT_LOPROC, SHT_HIPROC ] = [ 0x70000000, 0x7fffffff ] "Processor-specific use",
+  [ SHT_LOUSER, SHT_HIUSER ] = [ 0x80000000, 0x8fffffff ] "Application-specific use",
+}
+
+  // SHF_INFO_LINK =	0b1000000 "'sh_info' contains SHT index", // (1 << 6)
+
+define_flags!{
+  SHFlags(usize) "dada",
+
+  SHF_WRITE / W = 0 "Writable",
+  SHF_ALLOC / A = 1 "Occupies memory during execution",
+  SHF_EXECINSTR / X = 2 "Executable",
+  SHF_MERGE / M = 4 "Might be merged",
+  SHF_STRINGS / S = 5 "Contains nul-terminated strings",
+  SHF_INFO_LINK / I = 6 "`sh_info' contains SHT index",
+  SHF_LINK_ORDER / L = 7 "Preserve order after combining",
+  SHF_OS_NONCONFORMING / O = 8 "Non-standard OS specific handling",
+  SHF_GROUP / G = 9 "Section is member of a group.",
+  SHF_TLS / T = 10 "Section hold thread-local data.",
+  SHF_COMPRESSED / C = 11 "Section with compressed data.",
+  SHF_GNU_RETAIN = 21 "Not to be GCed by linker.",
+  SHF_ORDERED = 30 "Special ordering requirement",
+  SHF_EXCLUDE / E = 31 "Section is excluded unless",
+
+  // #define SHF_MASKOS	     0x0ff00000	/* OS-specific.  */
+  // #define SHF_MASKPROC	     0xf0000000	/* Processor-specific */
 }

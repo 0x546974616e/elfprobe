@@ -29,16 +29,16 @@ pub struct ElfIdentification<ElfType: self::ElfType> {
   /// Magic number byte 2 `0x46` (`F`).
   pub ei_mag3: ElfType::Uchar,
 
-  /// Identifies the class of the object file ([32-bit or 64-bit][ei_class]).
+  /// Identifies the class of the object file ([32-bit or 64-bit][super::abi::EiClass]).
   pub ei_class: ElfType::Uchar,
 
-  /// Specifies the data encoding ([big-endian or little-endian][ei_data]).
+  /// Specifies the data encoding ([big-endian or little-endian][super::abi::EiData]).
   pub ei_data: ElfType::Uchar,
 
-  /// Specifies the [ELF header version number][ei_version].
+  /// Specifies the [ELF header version number][super::abi::EiVersion].
   pub ei_version: ElfType::Uchar,
 
-  /// Identifies the [operating system and ABI][ei_osabi] for which the object is prepared.
+  /// Identifies the [operating system and ABI][super::abi::EiOsabi] for which the object is prepared.
   pub ei_osabi: ElfType::Uchar, // Not specified in Elf32 but ok.
 
   /// Identifies the version of the ABI for which the object is prepared.
@@ -59,18 +59,31 @@ impl<ElfType: self::ElfType> From<&ElfIdentification<ElfType>> for Magic {
   }
 }
 
-#[test]
-fn test_elf_identification_memory_size() {
+#[cfg(test)]
+mod tests {
   use std::mem::size_of;
 
-  use super::types::{ElfType32, ElfType64};
+  use super::ElfIdentification;
   use crate::core::{BigEndian, LittleEndian};
+  use crate::elf::{ElfType32, ElfType64};
 
-  type ElfIdentification32<Endianness> = ElfIdentification<ElfType32<Endianness>>;
-  type ElfIdentification64<Endianness> = ElfIdentification<ElfType64<Endianness>>;
+  #[test]
+  fn size_of_be_32() {
+    assert_eq!(size_of::<ElfIdentification<ElfType32<BigEndian>>>(), 16);
+  }
 
-  assert_eq!(size_of::<ElfIdentification32<BigEndian>>(), 16, "BE 32-bits");
-  assert_eq!(size_of::<ElfIdentification64<BigEndian>>(), 16, "BE 64-bits");
-  assert_eq!(size_of::<ElfIdentification32<LittleEndian>>(), 16, "LE 32-bits");
-  assert_eq!(size_of::<ElfIdentification64<LittleEndian>>(), 16, "LE 64-bits");
+  #[test]
+  fn size_of_be_64() {
+    assert_eq!(size_of::<ElfIdentification<ElfType64<BigEndian>>>(), 16);
+  }
+
+  #[test]
+  fn size_of_le_32() {
+    assert_eq!(size_of::<ElfIdentification<ElfType32<LittleEndian>>>(), 16);
+  }
+
+  #[test]
+  fn size_of_le_64() {
+    assert_eq!(size_of::<ElfIdentification<ElfType64<LittleEndian>>>(), 16);
+  }
 }

@@ -9,6 +9,7 @@ use crate::core::Pod;
 // ╠╩╗└┬┘ │ ├┤ └─┐
 // ╚═╝ ┴  ┴ └─┘└─┘
 
+#[repr(transparent)]
 pub struct Bytes<Type: Pod>(Type);
 
 impl<Type: Pod> From<Type> for Bytes<Type> {
@@ -29,6 +30,7 @@ impl<Type: Pod + fmt::Display> fmt::Display for Bytes<Type> {
 // ╠═╣├┤ ┌┼┘
 // ╩ ╩└─┘┴└─
 
+#[repr(transparent)]
 pub struct Hex<Type: Pod>(Type);
 
 impl<Type: Pod> From<Type> for Hex<Type> {
@@ -49,6 +51,7 @@ impl<Type: Pod + fmt::Display + fmt::LowerHex> fmt::Display for Hex<Type> {
 // ║║║├─┤│ ┬││
 // ╩ ╩┴ ┴└─┘┴└─┘
 
+#[repr(transparent)]
 /// Magic number wrapper to properly display it.
 pub struct Magic([u8; 4]);
 
@@ -63,18 +66,19 @@ impl fmt::Display for Magic {
   fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
     use fmt::Write;
 
-    let mut string = String::new();
     let mut last_is_printable = true;
-    for byte in self.0 {
-      if !last_is_printable || !byte.is_ascii_graphic() {
-        string.push(' ');
+    for (index, byte) in self.0.iter().enumerate() {
+      if index != 0 {
+        if !last_is_printable || !byte.is_ascii_graphic() {
+          formatter.write_char(' ')?;
+        }
       }
 
-      write!(string, "{}", ascii::escape_default(byte))?;
+      write!(formatter, "{}", ascii::escape_default(*byte))?;
       last_is_printable = byte.is_ascii_graphic();
     }
 
-    formatter.write_str(string.trim_ascii_start())
+    Ok(())
   }
 }
 
@@ -102,6 +106,7 @@ mod tests {
 // ║ ║├┤ ├┤ └─┐├┤  │
 // ╚═╝└  └  └─┘└─┘ ┴
 
+#[repr(transparent)]
 pub struct FileOffset<Type: Pod>(Type);
 
 impl<Type: Pod> From<Type> for FileOffset<Type> {
