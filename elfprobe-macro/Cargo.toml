@@ -1,0 +1,9 @@
+[package]
+name = "elfprobe-macro"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "elfprobe_macro"
+path = "sources/library.rs"
+proc-macro = true

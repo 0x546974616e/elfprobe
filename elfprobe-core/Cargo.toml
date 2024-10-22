@@ -1,0 +1,16 @@
+[package]
+name = "elfprobe-core"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "elfprobe-core"
+path = "sources/main.rs"
+
+[dependencies]
+libc = "0.2"
+elfprobe-macro = { path = "../elfprobe-macro/" }
+
+[features]
+unaligned = []
+default = [ "unaligned" ]

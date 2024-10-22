@@ -1,0 +1,5 @@
+[alias]
+f = "fmt"
+cl = "clippy"
+tt = "test -- --nocapture"
+d = "doc --document-private-items"
