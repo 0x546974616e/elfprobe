@@ -3,4 +3,9 @@ name = "elfprobe-cli"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "elfprobe"
+path = "sources/main.rs"
+
 [dependencies]
+elfprobe-core = { path = "../elfprobe-core/", default-features = true }

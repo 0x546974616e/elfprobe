@@ -3,13 +3,13 @@ name = "elfprobe-core"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "elfprobe-core"
-path = "sources/main.rs"
+[lib]
+name = "elfprobe_core"
+path = "sources/library.rs"
 
 [dependencies]
-libc = "0.2"
 elfprobe-macro = { path = "../elfprobe-macro/" }
+libc = "0.2"
 
 [features]
 unaligned = []

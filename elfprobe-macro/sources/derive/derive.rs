@@ -1,15 +1,15 @@
 use std::str::FromStr;
 
 use proc_macro::Delimiter;
-use proc_macro::Span;
-use proc_macro::Ident;
 use proc_macro::Group;
+use proc_macro::Ident;
+use proc_macro::Span;
 use proc_macro::TokenStream;
 use proc_macro::TokenTree;
 
+use crate::parser::rules::StructType;
 use crate::parser::Buffer;
 use crate::parser::Parse;
-use crate::parser::rules::StructType;
 
 ///
 /// Derive an empty trait.

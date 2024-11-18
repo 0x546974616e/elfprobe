@@ -120,7 +120,7 @@ macro_rules! parser {
 
   // Alternatives TT.
   (@type( ($($tt:tt)|+) )) => {
-    $crate::parser::r#union::Union<$(parser!(@type( $tt )),)+>
+    $crate::parser::Union<$(parser!(@type( $tt )),)+>
   };
 
   // Sequence of TT.
@@ -153,17 +153,15 @@ macro_rules! parser {
 
   // One or more of TT.
   (@parse( $input:ident, [$tt:tt+] )) => {
-    {
-      match { parser!(@parse( $input, [$tt*] )) } {
-        Some(tokens) if tokens.is_empty() => None,
-        value => value,
-      }
+    match { parser!(@parse( $input, [$tt*] )) } {
+      Some(tokens) if tokens.is_empty() => None,
+      value => value,
     }
   };
 
   // Zero or one of TT.
   (@parse( $input:ident, [$tt:tt?] )) => {
-      Some({ parser!(@parse( $input, $tt )) })
+    Some({ parser!(@parse( $input, $tt )) })
   };
 
   // Prevents unions of one element.
@@ -201,34 +199,32 @@ macro_rules! parser {
   };
 
   (#parse_union( $input:ident, $( $variant:tt($tt:tt) ),+ )) => {
-    {
-      if false { None }
+    'alternate: {
       $(
-        else if let Some(value) = { parser!(@parse( $input, $tt )) } {
-          Some($crate::parser::r#union::Union::$variant(value))
+        if let Some(value) = { parser!(@parse( $input, $tt )) } {
+          break 'alternate Some($crate::parser::Union::$variant(value));
         }
       )+
-      else { None }
+      None
     }
   };
 
   // Sequence of TT.
   (@parse( $input:ident, ($($tt:tt)+) )) => {
-    {
+    // try!() try{} (||{})()
+    'sequence: {
       let behind = $input.fork();
-      (|| { // try!() try{}
-        Some((
-          $(
-            match { parser!(@parse( $input, $tt )) } {
-              Some(value) => value,
-              None => {
-                $input.merge(behind); // Reset cursor.
-                return None;
-              }
-            },
-          )+
-        ))
-      })()
+      Some((
+        $(
+          match { parser!(@parse( $input, $tt )) } {
+            Some(value) => value,
+            None => {
+              $input.merge(behind); // Reset cursor.
+              break 'sequence None;
+            }
+          },
+        )+
+      ))
     }
   };
 

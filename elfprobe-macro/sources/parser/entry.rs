@@ -31,7 +31,7 @@ impl From<TokenTree> for Entry {
   }
 }
 
-macro_rules! implement_parser {
+macro_rules! implement_for_entry {
   ($($token: ident),*) => {
     $(
       impl Collect for $token {
@@ -55,4 +55,4 @@ macro_rules! implement_parser {
   };
 }
 
-implement_parser!(Identifier, Group, Literal, Punctuation);
+implement_for_entry!(Identifier, Group, Literal, Punctuation);

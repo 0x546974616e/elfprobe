@@ -6,6 +6,27 @@ pub(self) mod parser;
 
 use proc_macro::TokenStream;
 
+#[allow(unused)]
+#[cfg(any(doctest, clippy))]
+///
+/// Error `E0277`: the trait bound `Dada: Pod` is not satisfied
+///
+/// ```compile_fail,E0277
+/// use elfprobe_macro::Pod;
+///
+/// mod core {
+///   pub trait Pod {}
+///   pub fn test(_: impl Pod) {}
+///   //                  ^^^ required by this bound in `test`
+/// }
+///
+/// struct Dada;
+/// core::test(Dada);
+/// //         ^^^^ the trait `Pod` is not implemented for `Dada`
+/// ```
+///
+struct PodIsNotImplementedE0277;
+
 ///
 /// ```
 /// use elfprobe_macro::Pod;
@@ -37,36 +58,13 @@ use proc_macro::TokenStream;
 ///
 #[proc_macro_derive(Pod)]
 pub fn pod_derive(input: TokenStream) -> TokenStream {
-  let mut path = String::new();
+  let path = String::from(
+    match std::env::var("CARGO_PKG_NAME") {
+      Ok(package) if package == "elfprobe-macro" => "", // Ok
+      Ok(package) if package == "elfprobe-core" => "crate::",
+      _ => "elfprobe_core::",
+    }
+  );
 
-  match std::env::var("CARGO_PKG_NAME") {
-    Ok(package) if package == "elfprobe-macro" => (),
-    _ => path.push_str("elfprobe_core::"),
-  }
-
-  path.push_str("core::Pod");
-  crate::derive::derive_empty_trait(input, &path)
-}
-
-#[allow(unused)]
-#[cfg(any(doctest, clippy))]
-mod doctests {
-  ///
-  /// Error `E0277`: the trait bound `Dada: Pod` is not satisfied
-  ///
-  /// ```compile_fail,E0277
-  /// use elfprobe_macro::Pod;
-  ///
-  /// mod core {
-  ///   pub trait Pod {}
-  ///   pub fn test(_: impl Pod) {}
-  ///   //                  ^^^ required by this bound in `test`
-  /// }
-  ///
-  /// struct Dada;
-  /// core::test(Dada);
-  /// //         ^^^^ the trait `Pod` is not implemented for `Dada`
-  /// ```
-  ///
-  struct PodIsNotImplementedE0277;
+  crate::derive::derive_empty_trait(input, &(path + "Pod"))
 }
