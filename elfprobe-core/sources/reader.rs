@@ -65,10 +65,12 @@ pub trait Reader<'data>: Copy + Clone {
 /// memory-mapped file.
 ///
 impl<'data> Reader<'data> for &'data [u8] {
+  #[inline(always)]
   fn read_pod_at<Type: Pod>(self, offset: usize) -> Result<&'data Type, PodError> {
     Type::from_bytes_at(self, offset)
   }
 
+  #[inline(always)]
   fn read_pod_slice_at<Type: Pod>(self, offset: usize, count: usize) -> Result<&'data [Type], PodError> {
     Type::slice_from_bytes_at(self, offset, count)
   }

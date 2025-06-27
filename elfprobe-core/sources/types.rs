@@ -1,5 +1,8 @@
 use elfprobe_macro::Pod;
 
+use std::ops::{Add, Sub};
+use std::mem::size_of;
+
 // ╔═╗┌┐┌┌┬┐┬┌─┐┌┐┌
 // ║╣ │││ │││├─┤│││
 // ╚═╝┘└┘╶┴┘┴┴ ┴┘└┘
@@ -10,86 +13,114 @@ pub enum Endian {
   Big,
 }
 
-pub trait EndianOperation<Runtime, Processor> {
-  fn read(self, value: Runtime) -> Processor;
-  fn write(self, value: Processor) -> Runtime;
+pub trait EndianOperation<Runtime, Native> {
+  fn read(self, value: Runtime) -> Native;
+  fn write(self, value: Native) -> Runtime;
+}
+
+pub trait EndianInto<Type> {
+  fn endian_into(self, endian: Endian) -> Type;
 }
 
 macro_rules! impl_endian_operation {
-  ($( $type:ty:$bytes:literal ),+) => {
+  ($($type:ty),+) => {
     $(
-      impl_endian_operation!(@primitive $type);
-      impl_endian_operation!(@array $type:$bytes);
+      impl EndianOperation<$type, $type> for Endian {
+        fn read(self, value: $type) -> $type {
+          match self {
+            Endian::Big => <$type>::from_be(value),
+            Endian::Little => <$type>::from_le(value),
+          }
+        }
+
+        fn write(self, value: $type) -> $type {
+          match self {
+            Endian::Big => <$type>::to_be(value),
+            Endian::Little => <$type>::to_le(value),
+          }
+        }
+      }
+
+      impl EndianOperation<[u8; size_of::<$type>()], $type> for Endian {
+        fn read(self, value: [u8; size_of::<$type>()]) -> $type {
+          match self {
+            Endian::Big => <$type>::from_be_bytes(value),
+            Endian::Little => <$type>::from_le_bytes(value),
+          }
+        }
+
+        fn write(self, value: $type) -> [u8; size_of::<$type>()] {
+          match self {
+            Endian::Big => <$type>::to_be_bytes(value),
+            Endian::Little => <$type>::to_le_bytes(value),
+          }
+        }
+      }
     )+
-  };
-
-  (@primitive $type:ty) => {
-    impl EndianOperation<$type, $type> for Endian {
-      fn read(self, value: $type) -> $type {
-        match self {
-          Endian::Big => <$type>::from_be(value),
-          Endian::Little => <$type>::from_le(value),
-        }
-      }
-
-      fn write(self, value: $type) -> $type {
-        match self {
-          Endian::Big => <$type>::to_be(value),
-          Endian::Little => <$type>::to_le(value),
-        }
-      }
-    }
-  };
-
-  (@array $type:ty:$bytes:literal) => {
-    impl EndianOperation<[u8; $bytes], $type> for Endian {
-      fn read(self, value: [u8; $bytes]) -> $type {
-        match self {
-          Endian::Big => <$type>::from_be_bytes(value),
-          Endian::Little => <$type>::from_le_bytes(value),
-        }
-      }
-
-      fn write(self, value: $type) -> [u8; $bytes] {
-        match self {
-          Endian::Big => <$type>::to_be_bytes(value),
-          Endian::Little => <$type>::to_le_bytes(value),
-        }
-      }
-    }
   };
 }
 
-impl_endian_operation!(i16:2, u16:2, i32:4, u32:4, i64:8, u64:8);
+impl_endian_operation!(i8, u8, i16, u16, i32, u32, i64, u64);
 
 // ╔╦╗┬ ┬┌─┐┌─┐┌─┐
 //  ║ └┬┘├─┘├┤ └─┐
 //  ╩  ┴ ┴  └─┘└─┘
 
+#[rustfmt::skip]
+macro_rules! dada {
+  (i8) => { isize };
+  (u8) => { usize };
+  (i16) => { isize };
+  (u16) => { usize };
+  (i32) => { isize };
+  (u32) => { usize };
+  (i64) => { isize };
+  (u64) => { usize };
+}
+
+pub trait TypeOperation {
+  type Type: Add<Output = Self::Type> + Sub<Output = Self::Type>;
+
+  fn new(value: Self::Type, endian: Endian) -> Self;
+  fn set(&mut self, value: Self::Type, endian: Endian);
+  fn get(self, endian: Endian) -> Self::Type;
+}
+
 macro_rules! create_type {
-  (pub $struct:ident($inner:ty) -> $outer:ty) => {
+  (pub $struct:ident($inner:ty) -> $outer:ident) => {
     #[repr(transparent)]
     #[derive(Pod, Copy, Clone, Debug, Default)]
     pub struct $struct($inner);
 
-    impl $struct {
+    impl EndianInto<dada!($outer)> for $struct {
+      fn endian_into(self, endian: Endian) -> dada!($outer) {
+        self.get(endian) as dada!($outer)
+      }
+    }
+
+    impl TypeOperation for $struct {
+      type Type = $outer;
+
       #[inline(always)]
-      pub fn from(value: $outer, endian: Endian) -> Self {
+      fn new(value: $outer, endian: Endian) -> Self {
         Self(endian.write(value))
       }
 
       #[inline(always)]
-      pub fn get(self, endian: Endian) -> $outer {
-        endian.read(self.0)
+      fn set(&mut self, value: $outer, endian: Endian) {
+        self.0 = endian.write(value);
       }
 
       #[inline(always)]
-      pub fn set(&mut self, value: $outer, endian: Endian) {
-        self.0 = endian.write(value);
+      fn get(self, endian: Endian) -> $outer {
+        endian.read(self.0)
       }
     }
   };
 }
+
+create_type!(pub I8(i8) -> i8);
+create_type!(pub U8(u8) -> u8);
 
 // #[doc(cfg(not(feature = "unaligned")))]
 #[cfg(any(clippy, doc, not(feature = "unaligned")))]
@@ -160,6 +191,8 @@ mod tests {
       mod $module {
         use super::*;
 
+        test_types!(@type i8,  I8,  $endian, 0x11);
+        test_types!(@type u8,  U8,  $endian, 0x11);
         test_types!(@type i16, I16, $endian, 0x1122);
         test_types!(@type u16, U16, $endian, 0x1122);
         test_types!(@type i32, I32, $endian, 0x1122_3344);
@@ -177,7 +210,7 @@ mod tests {
         #[test]
         fn get() {
           let endian = Endian::$endian;
-          let value = $struct::from($initial, endian);
+          let value = $struct::new($initial, endian);
           assert_eq!(value.get(endian), $initial);
         }
 
